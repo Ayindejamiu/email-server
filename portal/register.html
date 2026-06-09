@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Account – NIEE Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+</head>
+<body>
+  <div class="niee-auth-wrapper">
+    <div class="niee-auth-card">
+
+      <!-- Card header -->
+      <div class="niee-auth-header">
+        <div style="margin:0 auto .75rem;width:70px;height:70px;background:#fff;border-radius:50%;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.2);">
+          <img src="niee-logo.jpg" alt="NIEE Logo" style="width:100%;height:100%;object-fit:contain;border-radius:50%;" />
+        </div>
+        <h4>Create Account</h4>
+        <p>Start your NIEE membership application</p>
+      </div>
+
+      <!-- Progress indicator -->
+      <div style="background:var(--niee-green-light);padding:.6rem 1.5rem;border-bottom:1px solid var(--niee-border);">
+        <div class="d-flex align-items-center gap-2" style="font-size:.78rem;color:var(--niee-muted);">
+          <span class="fw-700" style="color:var(--niee-green);">Step 1 of 3</span>
+          <div style="flex:1;height:4px;background:#ddd;border-radius:2px;">
+            <div style="width:33%;height:100%;background:var(--niee-green);border-radius:2px;"></div>
+          </div>
+          <span>Create Account → Fill Form → Pay Fee</span>
+        </div>
+      </div>
+
+      <!-- Card body -->
+      <div class="niee-auth-body">
+        <form id="registerForm" novalidate>
+
+          <div class="mb-3">
+            <label for="email" class="form-label fw-600" style="font-size:.88rem;">
+              Email Address <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-envelope text-muted" style="font-size:.9rem;"></i>
+              </span>
+              <input type="email" id="email" class="form-control border-start-0 ps-0"
+                     placeholder="your@email.com" autocomplete="email" required />
+            </div>
+            <div class="form-text">You'll use this email to log in to your member portal.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label fw-600" style="font-size:.88rem;">
+              Password <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-lock text-muted" style="font-size:.9rem;"></i>
+              </span>
+              <input type="password" id="password" class="form-control border-start-0 ps-0"
+                     placeholder="Create a strong password" autocomplete="new-password" required />
+              <button type="button" class="input-group-text bg-white border-start-0"
+                      onclick="togglePwd('password', this)" title="Toggle password">
+                <i class="bi bi-eye text-muted" style="font-size:.9rem;"></i>
+              </button>
+            </div>
+            <div class="form-text">Minimum 8 characters — must include uppercase, lowercase and a number.</div>
+            <div id="passwordStrength" class="small mt-1"></div>
+          </div>
+
+          <!-- Password strength bar -->
+          <div class="mb-4">
+            <div style="height:4px;background:#eee;border-radius:2px;overflow:hidden;">
+              <div id="pwdBar" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s;"></div>
+            </div>
+          </div>
+
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-niee py-2">
+              <i class="bi bi-person-plus me-1"></i> Create Account
+            </button>
+          </div>
+        </form>
+
+        <hr class="my-3" />
+        <p class="text-center mb-0" style="font-size:.88rem;">
+          Already have an account? <a href="login.html" class="text-niee fw-600">Login here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function togglePwd(id, btn) {
+      const inp = document.getElementById(id);
+      const icon = btn.querySelector('i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+      } else {
+        inp.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+      }
+    }
+
+    // Enhanced strength bar (mirrors auth.js validation rules)
+    document.getElementById('password')?.addEventListener('input', function () {
+      const v = this.value;
+      const bar = document.getElementById('pwdBar');
+      const msg = document.getElementById('passwordStrength');
+      let score = 0;
+      if (v.length >= 8) score++;
+      if (/[A-Z]/.test(v)) score++;
+      if (/[a-z]/.test(v)) score++;
+      if (/[0-9]/.test(v)) score++;
+      if (v.length >= 12) score++;
+      const pct = Math.min(score * 20, 100);
+      bar.style.width = pct + '%';
+      if (score <= 2) { bar.style.background = '#dc3545'; }
+      else if (score <= 3) { bar.style.background = '#fd7e14'; }
+      else if (score === 4) { bar.style.background = '#ffc107'; }
+      else { bar.style.background = 'var(--niee-green)'; }
+
+      if (!v) { msg.textContent = ''; return; }
+      if (v.length < 8) { msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>At least 8 characters required</span>'; return; }
+      if (!/[A-Z]/.test(v)) { msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Add an uppercase letter</span>'; return; }
+      if (!/[a-z]/.test(v)) { msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Add a lowercase letter</span>'; return; }
+      if (!/[0-9]/.test(v)) { msg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Add a number</span>'; return; }
+      msg.innerHTML = '<span style="color:var(--niee-green);"><i class="bi bi-check-circle me-1"></i>Password looks strong</span>';
+    });
+  </script>
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

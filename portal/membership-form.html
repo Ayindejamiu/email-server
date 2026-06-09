@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Membership Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="niee.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="niee-navbar navbar sticky-top mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="dashboard.html">
+        <img src="niee-logo.jpg" alt="NIEE Logo" style="width:36px;height:36px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" />
+        NIEE Membership Application
+      </a>
+    </div>
+  </nav>
+
+  <div class="container mb-5" style="max-width:860px;">
+    <div class="card shadow rounded">
+      <div class="card-body">
+        <h3 class="text-center mb-1" style="color:var(--niee-green-dark);">Membership Registration Form</h3>
+        <p class="text-center text-muted mb-4" style="font-size:.88rem;">Complete all sections carefully. Fields marked <span class="text-danger">*</span> are required.</p>
+
+        <form id="membershipForm">
+          <div id="formErrors" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
+          <h5 class="mt-2">Peronal Details</h5>
+          <p class="small text-muted">Fields marked with <span class="text-danger">*</span> are compulsory (except middle name).</p>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" id="firstName" class="form-control" required>
+            </div>
+              <div class="col-md-6">
+              <label for="middleName" class="form-label">Middle Name</label>
+              <input type="text" id="middleName" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" id="lastName" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="dob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+              <input type="date" id="dob" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+              <select id="gender" class="form-select" required>
+                <option value="" selected disabled>Select</option>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+            <textarea id="address" class="form-control" rows="2" required></textarea>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+              <input type="text" id="state" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label for="country" class="form-label">Country <span class="text-danger">*</span></label>
+              <input type="text" id="country" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label for="nationality" class="form-label">Nationality <span class="text-danger">*</span></label>
+              <input type="text" id="nationality" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+              <input type="tel" id="phone" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" id="email" class="form-control" required>
+            </div>
+          </div>
+
+          <h5 class="mt-4">Education Details</h5>
+          <p class="small text-muted">Add at least one education entry. All education fields are compulsory.</p>
+          <div id="educationContainer"></div>
+          <button type="button" class="btn btn-outline-primary mb-3" onclick="addEducation()">Add Education</button>
+
+          <h5 class="mt-4">Experience Record</h5>
+          <p class="small text-muted">Add at least one experience entry. All experience fields are compulsory.</p>
+          <div id="experienceContainer"></div>
+          <button type="button" class="btn btn-outline-primary mb-3" onclick="addExperience()">Add Experience</button>
+
+          <h5 class="mt-4">Next of Kin</h5>
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label for="nextFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" id="nextFirstName" class="form-control" required>
+            </div>
+                  <div class="col-md-3">
+              <label for="nextMiddleName" class="form-label">Middle Name</label>
+              <input type="text" id="nextMiddleName" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label for="nextLastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" id="nextLastName" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label for="nextEmail" class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" id="nextEmail" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label for="nextPhone" class="form-label">Phone <span class="text-danger">*</span></label>
+              <input type="tel" id="nextPhone" class="form-control" required>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="nextRelationship" class="form-label">Relationship <span class="text-danger">*</span></label>
+              <input type="text" id="nextRelationship" class="form-control" required>
+              
+            </div>
+          </div>
+
+          <h5 class="mt-4">Reference/Proposal</h5>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="refName" class="form-label">Full Name <span class="text-danger">*</span></label>
+              <input type="text" id="refName" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label for="refEmail" class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" id="refEmail" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label for="refPhone" class="form-label">Phone <span class="text-danger">*</span></label>
+              <input type="tel" id="refPhone" class="form-control" required>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="refMemberId" class="form-label">NIEE Membership NO <span class="text-danger">*</span></label>
+              <input type="text" id="refMemberId" class="form-control" required>
+            </div>
+          </div>
+
+          <h5 class="mt-4">Professional Information</h5>
+          <div class="row mb-3">
+               <div class="col-md-3">
+              <label for="nseBranch" class="form-label">NSE Branch</label>
+              <input type="text" id="nseBranch" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label for="nseGrade" class="form-label">NSE Grade of Membership</label>
+              <input type="text" id="nseGrade" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label for="corenNumber" class="form-label">COREN Registration Number</label>
+              <input type="text" id="corenNumber" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label for="othermembershipNumber" class="form-label">Other Membership Numbers</label>
+              <input type="text" id="othermembershipNumber" class="form-control">
+            </div>
+            <!-- status is managed in dashboard; removed from form -->
+          </div>
+
+          <h5 class="mt-4">NIEE Chapter</h5>
+          <div class="mb-4">
+            <label for="chapter" class="form-label">NIEE Chapter <span class="text-danger">*</span></label>
+            <select id="chapter" class="form-select" required>
+              <option value="" selected disabled>Select your chapter</option>
+              <option value="Abuja FCT Chapter">Abuja FCT Chapter</option>
+              <option value="Benue State Chapter">Benue State Chapter</option>
+              <option value="Delta State Chapter">Delta State Chapter</option>
+              <option value="Edo State Chapter">Edo State Chapter</option>
+              <option value="Imo State Chapter">Imo State Chapter</option>
+              <option value="Lagos State Chapter">Lagos State Chapter</option>
+              <option value="Osun State Chapter">Osun State Chapter</option>
+              <option value="Oyo State Chapter">Oyo State Chapter</option>
+              <option value="Rivers State Chapter">Rivers State Chapter</option>
+              <option value="Others">Others: Please specify</option>
+            </select>
+          </div>
+          <div class="mb-4 d-none" id="chapterOthersWrapper">
+            <label for="chapterOthers" class="form-label">Please specify your chapter <span class="text-danger">*</span></label>
+            <input type="text" id="chapterOthers" class="form-control" placeholder="Enter your chapter name">
+          </div>
+
+          <h5 class="mt-4">Membership Type</h5>
+          <div class="mb-4">
+            <label for="membershipType" class="form-label">Membership Type <span class="text-danger">*</span></label>
+            <select id="membershipType" class="form-select" required>
+              <option value="" selected disabled>Select membership type</option>
+              <option>Student Member</option>
+              <option>Graduate Member</option>
+              <option>Associate Member</option>
+              <option>Corporate Member</option>
+              <option>Fellow</option>
+              <option>Corporate Organization Member</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="declarationCheckbox" required>
+              <label class="form-check-label" for="declarationCheckbox">
+                I undertake to abide by the Articles and Bye-laws of the Institution and to promote its objectives to the best of my ability. I also declare that the information given above is in every respect, complete and accurate. <span class="text-danger">*</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="alert alert-info py-2 mb-3" style="font-size:.88rem;">
+            <i class="bi bi-credit-card me-1"></i>
+            A one-time registration fee of <strong>₦1,000</strong> is required to submit your application. A payment prompt will appear after you click the button below.
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="bi bi-credit-card me-1"></i>Submit &amp; Pay ₦1,000 Registration Fee
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Paystack -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <!-- Firebase SDKs -->
+  <script type="module" src="auth.js"></script>
+  
+  <!-- Chapter selection handler -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const chapterSelect = document.getElementById('chapter');
+      const chapterOthersWrapper = document.getElementById('chapterOthersWrapper');
+      const chapterOthersInput = document.getElementById('chapterOthers');
+      
+      if (chapterSelect) {
+        chapterSelect.addEventListener('change', function() {
+          if (this.value === 'Others') {
+            chapterOthersWrapper.classList.remove('d-none');
+            chapterOthersInput.required = true;
+          } else {
+            chapterOthersWrapper.classList.add('d-none');
+            chapterOthersInput.required = false;
+            chapterOthersInput.value = '';
+          }
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

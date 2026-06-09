@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Update Member Information – NIEE Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+  <style>
+    .section-title {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--niee-green);
+      border-bottom: 2px solid var(--niee-border);
+      padding-bottom: .3rem;
+      margin: 1.5rem 0 1rem;
+    }
+    .member-banner {
+      background: var(--niee-green-light);
+      border: 1px solid var(--niee-border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .member-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--niee-green);
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .readonly-field {
+      background: #f0f4f2 !important;
+      color: var(--niee-muted);
+      cursor: default;
+    }
+    .entry-card {
+      background: #f8fbf9;
+      border: 1px solid var(--niee-border);
+      border-radius: 8px;
+      padding: 1rem 1rem .75rem;
+      margin-bottom: .75rem;
+      position: relative;
+    }
+    .entry-card .remove-btn {
+      position: absolute;
+      top: .5rem;
+      right: .5rem;
+    }
+    .nav-pills .nav-link {
+      color: var(--niee-green);
+      border: 1px solid var(--niee-border);
+      margin-right: .35rem;
+      margin-bottom: .35rem;
+      font-size: .82rem;
+      padding: .3rem .85rem;
+      border-radius: 20px;
+    }
+    .nav-pills .nav-link.active {
+      background: var(--niee-green);
+      border-color: var(--niee-green);
+      color: #fff;
+    }
+    .pw-bar { height: 4px; border-radius: 2px; transition: width .3s, background .3s; }
+    .niee-input-icon .input-group-text { background:#fff; border-right:0; color:var(--niee-muted); }
+    .niee-input-icon .form-control     { border-left:0; }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      font-size: .8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-right: .5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="niee-navbar navbar sticky-top mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <img src="niee-logo.jpg" alt="NIEE Logo" />
+        NIEE Portal
+      </a>
+      <a href="login.html" class="btn btn-sm" style="color:#fff;border:1px solid rgba(255,255,255,.4);">
+        <i class="bi bi-person-circle me-1"></i>Member Login
+      </a>
+    </div>
+  </nav>
+
+  <div class="container mb-5" style="max-width:820px;">
+
+    <div class="text-center mb-4">
+      <h4 class="fw-bold" style="color:var(--niee-green-dark);">
+        <i class="bi bi-pencil-square me-2"></i>Update Member Information
+      </h4>
+      <p class="text-muted small mb-0">Enter your NIEE number and surname to verify your identity, then update your details.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STEP 1 — VERIFY
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="card shadow-sm mb-4" id="verifyCard">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">
+          <span class="step-badge" style="background:var(--niee-green);color:#fff;">1</span>Verify Your Identity
+        </h6>
+        <div id="verifyError" class="alert alert-danger d-none py-2 small" role="alert"></div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-600">NIEE Number <span class="text-danger">*</span></label>
+            <div class="input-group niee-input-icon">
+              <span class="input-group-text"><i class="bi bi-hash"></i></span>
+              <input type="text" id="nieeNumberInput" class="form-control"
+                     placeholder="e.g. 1 or NIEE00000001" autocomplete="off" />
+            </div>
+            <div class="form-text">Enter the number with or without the NIEE prefix.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-600">Surname <span class="text-danger">*</span></label>
+            <div class="input-group niee-input-icon">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" id="firstNameVerify" class="form-control"
+                     placeholder="Your surname / last name" autocomplete="family-name" />
+            </div>
+          </div>
+        </div>
+        <div class="d-grid mt-3">
+          <button id="verifyBtn" class="btn btn-niee py-2">
+            <i class="bi bi-shield-check me-1"></i>Verify &amp; Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STEP 2 — UPDATE FORM
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="card shadow-sm mb-4 d-none" id="updateCard">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">
+          <span class="step-badge" style="background:var(--niee-gold);color:#fff;">2</span>Update Your Information
+          <small class="text-muted fw-normal ms-1" style="font-size:.78rem;">Fields marked <span class="text-danger">*</span> are required</small>
+        </h6>
+
+        <!-- Member banner -->
+        <div class="member-banner">
+          <div class="member-avatar" id="memberAvatar">--</div>
+          <div>
+            <div class="fw-bold fs-6" id="bannerName">—</div>
+            <div class="text-muted small" id="bannerNieeNo">—</div>
+            <div class="small fw-semibold" id="bannerStatus">—</div>
+          </div>
+        </div>
+
+        <div id="updateSuccess" class="alert alert-success d-none py-2 small">
+          <i class="bi bi-check-circle me-1"></i><span id="updateSuccessMsg">Your information has been updated successfully.</span>
+        </div>
+        <div id="updateError" class="alert alert-danger d-none py-2 small"></div>
+
+        <!-- Section tabs -->
+        <ul class="nav nav-pills mb-4 flex-wrap" id="updateTabs">
+          <li class="nav-item"><a class="nav-link active" data-tab="personal"      href="#">Personal</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="education"     href="#">Education</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="experience"    href="#">Experience</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="nextofkin"     href="#">Next of Kin</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="reference"     href="#">Reference</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="professional"  href="#">Professional</a></li>
+          <li class="nav-item"><a class="nav-link"        data-tab="chapter"       href="#">Chapter &amp; Type</a></li>
+        </ul>
+
+        <form id="updateForm" novalidate>
+
+          <!-- ── Personal Details ──────────────────────────────── -->
+          <div class="tab-pane" id="tab-personal">
+            <p class="small text-muted">Fields marked <span class="text-danger">*</span> are compulsory (except middle name).</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small">First Name <span class="text-danger">*</span></label>
+                <input type="text" id="uf_firstName" class="form-control form-control-sm" required />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Middle Name</label>
+                <input type="text" id="uf_middleName" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Last Name <span class="text-danger">*</span></label>
+                <input type="text" id="uf_lastName" class="form-control form-control-sm" required />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Date of Birth <span class="text-danger">*</span></label>
+                <input type="date" id="uf_dob" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Gender <span class="text-danger">*</span></label>
+                <select id="uf_gender" class="form-select form-select-sm">
+                  <option value="">— Select —</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Nationality <span class="text-danger">*</span></label>
+                <input type="text" id="uf_nationality" class="form-control form-control-sm" />
+              </div>
+              <div class="col-12">
+                <label class="form-label small">Address <span class="text-danger">*</span></label>
+                <textarea id="uf_address" class="form-control form-control-sm" rows="2"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">State <span class="text-danger">*</span></label>
+                <input type="text" id="uf_state" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Country <span class="text-danger">*</span></label>
+                <input type="text" id="uf_country" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" id="uf_phone" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Email Address <span class="text-danger">*</span></label>
+                <input type="email" id="uf_email" class="form-control form-control-sm" />
+                <div class="form-text"><i class="bi bi-info-circle me-1"></i>This is your portal login email. Changing it here also updates your login credentials.</div>
+              </div>
+            </div>
+
+            <div class="section-title mt-3">Read-only (Secretariat Only)</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small">NIEE Number</label>
+                <input type="text" id="uf_nieeNumber" class="form-control form-control-sm readonly-field" readonly />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Membership Status</label>
+                <input type="text" id="uf_membershipStatus" class="form-control form-control-sm readonly-field" readonly />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Enrollment Date</label>
+                <input type="text" id="uf_enrollmentDate" class="form-control form-control-sm readonly-field" readonly />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Education ─────────────────────────────────────── -->
+          <div class="tab-pane d-none" id="tab-education">
+            <p class="small text-muted">Add at least one education entry.</p>
+            <div id="educationContainer"></div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="addEduBtn">
+              <i class="bi bi-plus-circle me-1"></i>Add Education
+            </button>
+          </div>
+
+          <!-- ── Experience ────────────────────────────────────── -->
+          <div class="tab-pane d-none" id="tab-experience">
+            <p class="small text-muted">List your work experience, most recent first.</p>
+            <div id="experienceContainer"></div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="addExpBtn">
+              <i class="bi bi-plus-circle me-1"></i>Add Experience
+            </button>
+          </div>
+
+          <!-- ── Next of Kin ────────────────────────────────────── -->
+          <div class="tab-pane d-none" id="tab-nextofkin">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small">First Name <span class="text-danger">*</span></label>
+                <input type="text" id="nok_firstName" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Middle Name</label>
+                <input type="text" id="nok_middleName" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Last Name <span class="text-danger">*</span></label>
+                <input type="text" id="nok_lastName" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Email <span class="text-danger">*</span></label>
+                <input type="email" id="nok_email" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Phone <span class="text-danger">*</span></label>
+                <input type="tel" id="nok_phone" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Relationship <span class="text-danger">*</span></label>
+                <input type="text" id="nok_relationship" class="form-control form-control-sm" placeholder="e.g. Spouse, Parent" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Reference / Proposal ──────────────────────────── -->
+          <div class="tab-pane d-none" id="tab-reference">
+            <p class="small text-muted">Provide details of an existing NIEE member who is proposing your membership.</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small">Full Name <span class="text-danger">*</span></label>
+                <input type="text" id="ref_name" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Email <span class="text-danger">*</span></label>
+                <input type="email" id="ref_email" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Phone <span class="text-danger">*</span></label>
+                <input type="tel" id="ref_phone" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">NIEE Membership No. <span class="text-danger">*</span></label>
+                <input type="text" id="ref_memberId" class="form-control form-control-sm" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Professional Information ──────────────────────── -->
+          <div class="tab-pane d-none" id="tab-professional">
+            <p class="small text-muted">All fields in this section are optional.</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small">NSE Branch</label>
+                <input type="text" id="uf_nseBranch" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">NSE Grade of Membership</label>
+                <input type="text" id="uf_nseGrade" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">NSE Registration No.</label>
+                <input type="text" id="uf_nseRegNo" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">COREN Registration No.</label>
+                <input type="text" id="uf_corenNumber" class="form-control form-control-sm" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Other Membership Numbers</label>
+                <input type="text" id="uf_otherMembership" class="form-control form-control-sm" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── NIEE Chapter & Membership Type ───────────────── -->
+          <div class="tab-pane d-none" id="tab-chapter">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small">NIEE Chapter <span class="text-danger">*</span></label>
+                <select id="uf_chapter" class="form-select form-select-sm">
+                  <option value="">— Select your chapter —</option>
+                  <option value="Abuja FCT Chapter">Abuja FCT Chapter</option>
+                  <option value="Benue State Chapter">Benue State Chapter</option>
+                  <option value="Delta State Chapter">Delta State Chapter</option>
+                  <option value="Edo State Chapter">Edo State Chapter</option>
+                  <option value="Imo State Chapter">Imo State Chapter</option>
+                  <option value="Lagos State Chapter">Lagos State Chapter</option>
+                  <option value="Osun State Chapter">Osun State Chapter</option>
+                  <option value="Oyo State Chapter">Oyo State Chapter</option>
+                  <option value="Rivers State Chapter">Rivers State Chapter</option>
+                  <option value="Others">Others: Please specify</option>
+                </select>
+              </div>
+              <div class="col-md-6 d-none" id="chapterOthersWrapper">
+                <label class="form-label small">Please specify chapter <span class="text-danger">*</span></label>
+                <input type="text" id="uf_chapterOthers" class="form-control form-control-sm" placeholder="Enter chapter name" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">Membership Type <span class="text-danger">*</span></label>
+                <select id="uf_membershipType" class="form-select form-select-sm">
+                  <option value="">— Select membership type —</option>
+                  <option>Corporate Member</option>
+                  <option>Corporate Company Member</option>
+                  <option>Fellows</option>
+                  <option>Associate Members</option>
+                  <option>Graduate Members</option>
+                  <option>Student Members</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save / Reset buttons -->
+          <div class="d-flex gap-2 mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-niee px-4" id="saveBtn">
+              <i class="bi bi-save me-1"></i>Save All Changes
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="cancelBtn">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STEP 3 — SET PORTAL PASSWORD
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="card shadow-sm mb-4 d-none" id="passwordCard">
+      <div class="card-body">
+        <h6 class="fw-bold mb-1">
+          <span class="step-badge" style="background:var(--niee-green);color:#fff;">3</span>Set Your Portal Password
+        </h6>
+        <p class="text-muted small mb-3">Create a password to log in to the member portal using your email address.</p>
+
+        <div id="pwSuccess" class="alert alert-success d-none py-2 small">
+          <i class="bi bi-check-circle me-1"></i><span id="pwSuccessMsg">Password set successfully!</span>
+        </div>
+        <div id="pwError" class="alert alert-danger d-none py-2 small"></div>
+
+        <div class="row g-3" style="max-width:500px;">
+          <div class="col-12">
+            <label class="form-label small">Email Address <span class="text-danger">*</span></label>
+            <input type="email" id="pw_email" class="form-control form-control-sm"
+                   placeholder="Enter the email you want to use to log in" autocomplete="email" />
+            <div class="form-text"><i class="bi bi-info-circle me-1"></i>Enter or confirm the email address you will use to log in to the portal.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">New Password <span class="text-danger">*</span></label>
+            <div class="input-group niee-input-icon">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" id="pw_password" class="form-control form-control-sm"
+                     placeholder="Min 8 chars, upper, lower, number" autocomplete="new-password" />
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="togglePw" tabindex="-1">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="mt-1 mb-1"><div class="pw-bar" id="pwBar" style="width:0;background:#ccc;"></div></div>
+            <div class="form-text" id="pwHint"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Confirm Password <span class="text-danger">*</span></label>
+            <div class="input-group niee-input-icon">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" id="pw_confirm" class="form-control form-control-sm"
+                     placeholder="Repeat password" autocomplete="new-password" />
+            </div>
+          </div>
+          <div class="col-12">
+            <button type="button" class="btn btn-niee px-4" id="setPwBtn">
+              <i class="bi bi-key me-1"></i>Set Password &amp; Create Account
+            </button>
+          </div>
+        </div>
+
+        <div id="loginPrompt" class="mt-3 d-none">
+          <a href="login.html" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Go to Login
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module">
+    import { initializeApp }    from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getDatabase, ref, get, update }
+                                 from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js';
+    import { getAuth, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, signInAnonymously }
+                                 from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyA2shORfx2zny40pH_ATV-VoR8NLXECAoo",
+      authDomain:        "nieeportal.firebaseapp.com",
+      databaseURL:       "https://nieeportal-default-rtdb.firebaseio.com",
+      projectId:         "nieeportal",
+      storageBucket:     "nieeportal.appspot.com",
+      messagingSenderId: "562299924853",
+      appId:             "1:562299924853:web:235c52db78bc4cd141233c"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth(app);
+
+    // ── State ──────────────────────────────────────────────────
+    let verifiedNieeNumber = null;
+    let originalRecord     = null;
+
+    // ── Utilities ──────────────────────────────────────────────
+    function formatNieeNumber(raw) {
+      const t = raw.trim().toUpperCase();
+      if (/^NIEE\d+$/.test(t)) {
+        const n = parseInt(t.replace('NIEE', ''), 10);
+        return isNaN(n) ? null : 'NIEE' + String(n).padStart(8, '0');
+      }
+      const n = parseInt(t, 10);
+      return (isNaN(n) || n <= 0) ? null : 'NIEE' + String(n).padStart(8, '0');
+    }
+
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    }
+
+    function showErr(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.remove('d-none');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function hideEl(id)  { document.getElementById(id).classList.add('d-none'); }
+    function showEl(id)  { document.getElementById(id).classList.remove('d-none'); }
+
+    function setVal(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = val || '';
+    }
+
+    // ── Tab switching ──────────────────────────────────────────
+    document.getElementById('updateTabs').addEventListener('click', e => {
+      e.preventDefault();
+      const link = e.target.closest('[data-tab]');
+      if (!link) return;
+      document.querySelectorAll('#updateTabs .nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('d-none'));
+      document.getElementById('tab-' + link.dataset.tab).classList.remove('d-none');
+    });
+
+    // ── Chapter "Others" toggle ────────────────────────────────
+    document.getElementById('uf_chapter').addEventListener('change', function() {
+      if (this.value === 'Others') {
+        showEl('chapterOthersWrapper');
+        document.getElementById('uf_chapterOthers').required = true;
+      } else {
+        hideEl('chapterOthersWrapper');
+        document.getElementById('uf_chapterOthers').required = false;
+        document.getElementById('uf_chapterOthers').value = '';
+      }
+    });
+
+    // ── Education entry builder ────────────────────────────────
+    function buildEduRow(d = {}) {
+      const div = document.createElement('div');
+      div.className = 'entry-card';
+      div.innerHTML = `
+        <button type="button" class="btn btn-outline-danger btn-sm remove-btn">
+          <i class="bi bi-trash"></i>
+        </button>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label small">Institution / School</label>
+            <input type="text" class="form-control form-control-sm edu-institution" value="${esc(d.institution)}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Degree / Qualification</label>
+            <input type="text" class="form-control form-control-sm edu-degree" value="${esc(d.degree)}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Discipline / Course</label>
+            <input type="text" class="form-control form-control-sm edu-discipline" value="${esc(d.discipline)}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Dates (e.g. 2010 – 2014)</label>
+            <input type="text" class="form-control form-control-sm edu-dates" value="${esc(d.dates)}" />
+          </div>
+        </div>`;
+      div.querySelector('.remove-btn').addEventListener('click', () => div.remove());
+      return div;
+    }
+
+    document.getElementById('addEduBtn').addEventListener('click', () => {
+      document.getElementById('educationContainer').appendChild(buildEduRow());
+    });
+
+    // ── Experience entry builder ───────────────────────────────
+    function buildExpRow(d = {}) {
+      const div = document.createElement('div');
+      div.className = 'entry-card';
+      div.innerHTML = `
+        <button type="button" class="btn btn-outline-danger btn-sm remove-btn">
+          <i class="bi bi-trash"></i>
+        </button>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label small">Job Title / Position</label>
+            <input type="text" class="form-control form-control-sm exp-title" value="${esc(d.title)}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Employer / Organisation</label>
+            <input type="text" class="form-control form-control-sm exp-employer" value="${esc(d.employer)}" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Employer Address</label>
+            <input type="text" class="form-control form-control-sm exp-address" value="${esc(d.employerAddress)}" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Period</label>
+            <input type="text" class="form-control form-control-sm exp-date" value="${esc(d.date)}" placeholder="e.g. Jan 2018 – Present" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Duties / Summary</label>
+            <input type="text" class="form-control form-control-sm exp-duties" value="${esc(d.duties)}" />
+          </div>
+        </div>`;
+      div.querySelector('.remove-btn').addEventListener('click', () => div.remove());
+      return div;
+    }
+
+    document.getElementById('addExpBtn').addEventListener('click', () => {
+      document.getElementById('experienceContainer').appendChild(buildExpRow());
+    });
+
+    // ── Populate all form fields from a record ─────────────────
+    function populateForm(data) {
+      // Personal
+      setVal('uf_firstName',       data.firstName);
+      setVal('uf_middleName',      data.middleName);
+      setVal('uf_lastName',        data.lastName);
+      setVal('uf_dob',             data.dob);
+      setVal('uf_gender',          data.gender);
+      setVal('uf_nationality',     data.nationality);
+      setVal('uf_address',         data.address    || data.contact_address);
+      setVal('uf_state',           data.state);
+      setVal('uf_country',         data.country);
+      setVal('uf_phone',           data.phone      || data.gsm);
+      setVal('uf_email',           data.email);
+
+      // Read-only
+      setVal('uf_nieeNumber',      data.nieeNumber);
+      setVal('uf_membershipStatus',data.membershipStatus || data.membershipType);
+      setVal('uf_enrollmentDate',  data.enrollmentDate   || data.enrolledAt);
+
+      // Professional — handle both CSV field names and form field names
+      setVal('uf_nseBranch',          data.nseBranch);
+      setVal('uf_nseGrade',           data.nseGrade);
+      setVal('uf_nseRegNo',           data.nseRegNo       || data.nseRegistrationNo);
+      setVal('uf_corenNumber',        data.corenNumber    || data.corenRegNo);
+      setVal('uf_otherMembership',    data.otherMembership || data.othermembershipNumber);
+
+      // Chapter
+      const chapterSel = document.getElementById('uf_chapter');
+      const chapterVal = data.chapter || '';
+      const knownChapters = Array.from(chapterSel.options).map(o => o.value);
+      if (chapterVal && !knownChapters.includes(chapterVal)) {
+        // stored as "Others: XYZ" or a completely custom name
+        chapterSel.value = 'Others';
+        showEl('chapterOthersWrapper');
+        setVal('uf_chapterOthers', chapterVal.replace(/^Others:\s*/i, ''));
+      } else {
+        chapterSel.value = chapterVal;
+        hideEl('chapterOthersWrapper');
+      }
+
+      // Membership type — normalise stored values to match select options
+      const typeMap = {
+        'fellow':                'Fellows',
+        'fellows':               'Fellows',
+        'member':                'Corporate Company Member',
+        'members':               'Corporate Company Member',
+        'associate member':      'Associate Members',
+        'associate members':     'Associate Members',
+        'graduate member':       'Graduate Members',
+        'graduate members':      'Graduate Members',
+        'student member':        'Student Members',
+        'student members':       'Student Members',
+        'corporate body member': 'Corporate Member',
+        'corporate':             'Corporate Member',
+      };
+      const rawType = (data.membershipType || data.membershipStatus || '').trim();
+      const normType = typeMap[rawType.toLowerCase()] || rawType;
+      setVal('uf_membershipType', normType);
+
+      // Next of kin
+      const nok = data.nextOfKin || {};
+      setVal('nok_firstName',    nok.firstName);
+      setVal('nok_middleName',   nok.middleName);
+      setVal('nok_lastName',     nok.lastName);
+      setVal('nok_email',        nok.email);
+      setVal('nok_phone',        nok.phone);
+      setVal('nok_relationship', nok.relationship);
+
+      // Reference
+      const ref_ = data.reference || {};
+      setVal('ref_name',     ref_.name);
+      setVal('ref_email',    ref_.email);
+      setVal('ref_phone',    ref_.phone);
+      setVal('ref_memberId', ref_.memberId);
+
+      // Education
+      const eduCont = document.getElementById('educationContainer');
+      eduCont.innerHTML = '';
+      const edArr = Array.isArray(data.education) ? data.education : [];
+      (edArr.length ? edArr : [{}]).forEach(e => eduCont.appendChild(buildEduRow(e)));
+
+      // Experience
+      const expCont = document.getElementById('experienceContainer');
+      expCont.innerHTML = '';
+      const exArr = Array.isArray(data.experience) ? data.experience : [];
+      (exArr.length ? exArr : [{}]).forEach(e => expCont.appendChild(buildExpRow(e)));
+
+      // Banner
+      const initials = ((data.firstName||'')[0]||'') + ((data.lastName||'')[0]||'');
+      document.getElementById('memberAvatar').textContent = initials.toUpperCase() || '??';
+      document.getElementById('bannerName').textContent =
+        [data.firstName, data.middleName, data.lastName].filter(Boolean).join(' ') || '—';
+      document.getElementById('bannerNieeNo').textContent  = data.nieeNumber || '';
+      const statusText = data.membershipStatus || data.membershipType || '';
+      document.getElementById('bannerStatus').textContent  = statusText;
+      document.getElementById('bannerStatus').className = 'small fw-semibold ' +
+        (statusText ? 'text-success' : 'text-muted');
+
+      // Password step email — mark auto-filled so live-sync from uf_email stays active
+      setVal('pw_email', data.email);
+      if (data.email) document.getElementById('pw_email').dataset.autoFilled = 'true';
+    }
+
+    // ── STEP 1: Verify ─────────────────────────────────────────
+    async function doVerify() {
+      hideEl('verifyError');
+      const rawNiee  = document.getElementById('nieeNumberInput').value;
+      const rawFirst = document.getElementById('firstNameVerify').value.trim();
+
+      if (!rawNiee || !rawFirst) {
+        showErr('verifyError', 'Please enter both your NIEE number and first name.');
+        return;
+      }
+      const nieeNumber = formatNieeNumber(rawNiee);
+      if (!nieeNumber) {
+        showErr('verifyError', 'Invalid NIEE number. Enter a number like "42" or "NIEE00000042".');
+        return;
+      }
+
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying…';
+
+      // Sign in anonymously FIRST so all subsequent Firebase reads and writes
+      // satisfy the "auth != null" RTDB security rule.
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (anonErr) { console.warn('Anonymous auth:', anonErr.message); }
+      }
+
+      try {
+        const snap = await get(ref(db, `members_registry/${nieeNumber}`));
+        if (!snap.exists()) {
+          showErr('verifyError', `No member found with NIEE number ${nieeNumber}.`);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Continue';
+          return;
+        }
+        const data = snap.val();
+
+        // Surname match — CSV imported records store the surname in `firstName`.
+        // Portal-registered members store it in `lastName`.
+        // Accept a match against either field (case-insensitive).
+        const entered = rawFirst.toLowerCase().trim();
+        const matchesFirstName = (data.firstName || '').toLowerCase().trim() === entered;
+        const matchesLastName  = (data.lastName  || '').toLowerCase().trim() === entered;
+        if (!matchesFirstName && !matchesLastName) {
+          showErr('verifyError', 'Surname does not match our records. Please check and try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Continue';
+          return;
+        }
+
+        verifiedNieeNumber = nieeNumber;
+        originalRecord = { ...data, nieeNumber };
+
+        populateForm(originalRecord);
+
+        showEl('updateCard');
+        showEl('passwordCard');
+        document.getElementById('updateCard').scrollIntoView({ behavior: 'smooth' });
+
+        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Verified';
+        btn.classList.replace('btn-niee', 'btn-success');
+
+      } catch (err) {
+        showErr('verifyError', 'Connection error. Please check your internet and try again.');
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Verify & Continue';
+      }
+    }
+
+    document.getElementById('verifyBtn').addEventListener('click', doVerify);
+    ['nieeNumberInput', 'firstNameVerify'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doVerify(); })
+    );
+
+    // ── STEP 2: Save ───────────────────────────────────────────
+    document.getElementById('updateForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!verifiedNieeNumber) return;
+      hideEl('updateError');
+      hideEl('updateSuccess');
+
+      const firstName = document.getElementById('uf_firstName').value.trim();
+      const lastName  = document.getElementById('uf_lastName').value.trim();
+      const phone     = document.getElementById('uf_phone').value.trim();
+      const email     = document.getElementById('uf_email').value.trim().toLowerCase();
+
+      if (!firstName || !lastName || !phone || !email) {
+        showErr('updateError', 'First name, last name, phone, and email are required.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showErr('updateError', 'Please enter a valid email address.');
+        return;
+      }
+
+      // Chapter value
+      let chapterValue = document.getElementById('uf_chapter').value;
+      if (chapterValue === 'Others') {
+        const othersVal = document.getElementById('uf_chapterOthers').value.trim();
+        if (!othersVal) { showErr('updateError', 'Please specify your chapter name.'); return; }
+        chapterValue = `Others: ${othersVal}`;
+      }
+
+      // Collect education
+      const education = [];
+      document.querySelectorAll('#educationContainer .entry-card').forEach(card => {
+        const row = {
+          institution: card.querySelector('.edu-institution').value.trim(),
+          degree:      card.querySelector('.edu-degree').value.trim(),
+          discipline:  card.querySelector('.edu-discipline').value.trim(),
+          dates:       card.querySelector('.edu-dates').value.trim()
+        };
+        if (row.institution || row.degree || row.discipline || row.dates) education.push(row);
+      });
+
+      // Collect experience
+      const experience = [];
+      document.querySelectorAll('#experienceContainer .entry-card').forEach(card => {
+        const row = {
+          title:           card.querySelector('.exp-title').value.trim(),
+          employer:        card.querySelector('.exp-employer').value.trim(),
+          employerAddress: card.querySelector('.exp-address').value.trim(),
+          date:            card.querySelector('.exp-date').value.trim(),
+          duties:          card.querySelector('.exp-duties').value.trim()
+        };
+        if (row.title || row.employer || row.date) experience.push(row);
+      });
+
+      const updates = {
+        firstName,
+        middleName:   document.getElementById('uf_middleName').value.trim(),
+        lastName,
+        dob:          document.getElementById('uf_dob').value,
+        gender:       document.getElementById('uf_gender').value,
+        nationality:  document.getElementById('uf_nationality').value.trim(),
+        address:      document.getElementById('uf_address').value.trim(),
+        state:        document.getElementById('uf_state').value.trim(),
+        country:      document.getElementById('uf_country').value.trim(),
+        phone,
+        email,
+        chapter:      chapterValue,
+        membershipType: document.getElementById('uf_membershipType').value,
+        // Imported (registry) members are existing paid members — approve on first update
+        // if no status has been set yet, or if status is still the default empty value
+        status: originalRecord.status || 'Approved',
+        nextOfKin: {
+          firstName:    document.getElementById('nok_firstName').value.trim(),
+          middleName:   document.getElementById('nok_middleName').value.trim(),
+          lastName:     document.getElementById('nok_lastName').value.trim(),
+          email:        document.getElementById('nok_email').value.trim(),
+          phone:        document.getElementById('nok_phone').value.trim(),
+          relationship: document.getElementById('nok_relationship').value.trim()
+        },
+        reference: {
+          name:     document.getElementById('ref_name').value.trim(),
+          email:    document.getElementById('ref_email').value.trim(),
+          phone:    document.getElementById('ref_phone').value.trim(),
+          memberId: document.getElementById('ref_memberId').value.trim()
+        },
+        nseBranch:           document.getElementById('uf_nseBranch').value.trim(),
+        nseGrade:            document.getElementById('uf_nseGrade').value.trim(),
+        nseRegNo:            document.getElementById('uf_nseRegNo').value.trim(),
+
+        corenNumber:         document.getElementById('uf_corenNumber').value.trim(),
+        otherMembership:     document.getElementById('uf_otherMembership').value.trim(),
+        education,
+        experience,
+        lastUpdatedAt: new Date().toISOString()
+      };
+
+      // Strip empty strings and empty nested objects
+      function stripEmpty(obj) {
+        Object.keys(obj).forEach(k => {
+          if (obj[k] === '' || obj[k] == null) { delete obj[k]; return; }
+          if (typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+            stripEmpty(obj[k]);
+            if (Object.keys(obj[k]).length === 0) delete obj[k];
+          }
+        });
+      }
+      stripEmpty(updates);
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+      // Ensure we have a valid auth token before writing (anonymous sign-in from verify step
+      // should already be active, but re-check in case the session expired)
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (anonErr) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Save All Changes';
+          showErr('updateError', 'Authentication error. Please refresh the page and try again.');
+          return;
+        }
+      }
+
+      try {
+        // Always write to members_registry (the canonical registry store)
+        await update(ref(db, `members_registry/${verifiedNieeNumber}`), updates);
+
+        // If this registry record is linked to a portal auth account, sync there too
+        const linkedUid = originalRecord.authUid;
+        if (linkedUid) {
+          await update(ref(db, `members/${linkedUid}`), updates);
+        }
+
+        // If the email changed and there is a linked auth account, update Firebase Auth login email
+        const oldEmail = (originalRecord.email || '').toLowerCase();
+        if (linkedUid && email !== oldEmail) {
+          try {
+            const authRes = await fetch('http://localhost:3001/api/update-auth-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid: linkedUid, newEmail: email })
+            });
+            if (!authRes.ok) {
+              const authErr = await authRes.json().catch(() => ({}));
+              console.warn('Auth email update failed:', authErr.error);
+              showEl('updateSuccess');
+              document.getElementById('updateSuccessMsg').textContent =
+                'Profile saved. Note: login email could not be updated automatically — please contact the secretariat.';
+            } else {
+              showEl('updateSuccess');
+              document.getElementById('updateSuccessMsg').textContent =
+                'Profile and login email updated successfully.';
+            }
+          } catch (authFetchErr) {
+            console.warn('Auth email update request failed:', authFetchErr.message);
+            showEl('updateSuccess');
+            document.getElementById('updateSuccessMsg').textContent =
+              'Profile saved. Note: login email could not be updated automatically — please contact the secretariat.';
+          }
+        } else {
+          document.getElementById('updateSuccessMsg').textContent = 'Your information has been updated successfully.';
+          showEl('updateSuccess');
+        }
+
+        document.getElementById('updateSuccess').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Refresh banner
+        const ini = (firstName[0]||'') + (lastName[0]||'');
+        document.getElementById('memberAvatar').textContent = ini.toUpperCase();
+        document.getElementById('bannerName').textContent =
+          [firstName, document.getElementById('uf_middleName').value.trim(), lastName].filter(Boolean).join(' ');
+        const pwEmailEl = document.getElementById('pw_email');
+        pwEmailEl.value = email;
+        pwEmailEl.dataset.autoFilled = 'true';
+
+        originalRecord = { ...originalRecord, ...updates };
+
+      } catch (err) {
+        const msg = err.message || String(err);
+        const isPermission = msg.includes('PERMISSION_DENIED') || msg.includes('Permission denied');
+        showErr('updateError', isPermission
+          ? 'Save blocked by Firebase security rules. Please ask the portal admin to update the Firebase RTDB rules to allow member-registry writes (see setup guide).'
+          : 'Failed to save: ' + msg);
+        console.error(err);
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Save All Changes';
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      if (originalRecord) populateForm(originalRecord);
+      hideEl('updateError');
+      hideEl('updateSuccess');
+    });
+
+    // ── Sync pw_email with uf_email live so Step 3 always reflects Step 2 ──
+    document.getElementById('uf_email').addEventListener('input', function () {
+      const pwEmailEl = document.getElementById('pw_email');
+      // Only sync if pw_email is empty or was previously in sync with uf_email
+      if (!pwEmailEl.value || pwEmailEl.dataset.autoFilled === 'true') {
+        pwEmailEl.value = this.value.trim().toLowerCase();
+        pwEmailEl.dataset.autoFilled = 'true';
+      }
+    });
+    document.getElementById('pw_email').addEventListener('input', function () {
+      // Once user manually edits Step 3 email, stop auto-syncing from Step 2
+      this.dataset.autoFilled = 'false';
+    });
+
+    // ── STEP 3: Password ───────────────────────────────────────
+    const pwInput = document.getElementById('pw_password');
+    const pwBar   = document.getElementById('pwBar');
+    const pwHint  = document.getElementById('pwHint');
+
+    function pwStrength(pw) {
+      let s = 0;
+      if (pw.length >= 8)           s++;
+      if (/[A-Z]/.test(pw))         s++;
+      if (/[a-z]/.test(pw))         s++;
+      if (/[0-9]/.test(pw))         s++;
+      if (/[^A-Za-z0-9]/.test(pw))  s++;
+      return s;
+    }
+
+    pwInput.addEventListener('input', () => {
+      const pw = pwInput.value;
+      const s  = pwStrength(pw);
+      const colours = ['#ccc','#e74c3c','#e67e22','#f1c40f','#2ecc71','#1a7a4a'];
+      pwBar.style.width      = Math.min(s * 20, 100) + '%';
+      pwBar.style.background = colours[s] || '#ccc';
+      const labels = ['','Very weak','Weak','Fair','Strong','Very strong'];
+      pwHint.textContent  = pw ? (labels[s] || '') : '';
+      pwHint.style.color  = colours[s] || '#999';
+    });
+
+    document.getElementById('togglePw').addEventListener('click', () => {
+      const isPw = pwInput.type === 'password';
+      pwInput.type = isPw ? 'text' : 'password';
+      document.querySelector('#togglePw i').className = isPw ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+
+    document.getElementById('setPwBtn').addEventListener('click', async () => {
+      hideEl('pwError');
+      hideEl('pwSuccess');
+
+      const email   = document.getElementById('pw_email').value.trim();
+      const pw      = document.getElementById('pw_password').value;
+      const confirm = document.getElementById('pw_confirm').value;
+
+      if (!email)        { showErr('pwError','Email is required. Please save your information first.'); return; }
+      if (!pw)           { showErr('pwError','Please enter a password.'); return; }
+      if (pw.length < 8) { showErr('pwError','Password must be at least 8 characters.'); return; }
+      if (!/[A-Z]/.test(pw)) { showErr('pwError','Password must contain an uppercase letter.'); return; }
+      if (!/[a-z]/.test(pw)) { showErr('pwError','Password must contain a lowercase letter.'); return; }
+      if (!/[0-9]/.test(pw)) { showErr('pwError','Password must contain a number.'); return; }
+      if (pw !== confirm)    { showErr('pwError','Passwords do not match.'); return; }
+
+      const btn = document.getElementById('setPwBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating account…';
+
+      try {
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        if (methods && methods.length > 0) {
+          showErr('pwError','An account already exists for this email. Please use the Login page.');
+          showEl('loginPrompt');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-key me-1"></i>Set Password & Create Account';
+          return;
+        }
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        const uid = cred.user.uid;
+        // createUserWithEmailAndPassword signs in the new account automatically —
+        // auth.currentUser is now the new user, so auth.uid === uid for RTDB rules.
+
+        // Link the registry record to the new auth account
+        await update(ref(db, `members_registry/${verifiedNieeNumber}`), { authUid: uid });
+
+        // Seed the portal members/ node so dashboard works on first login
+        const registrySnap = await get(ref(db, `members_registry/${verifiedNieeNumber}`));
+        const registryData = registrySnap.val() || {};
+        const portalSeed = { ...registryData, authUid: uid, nieeNumber: verifiedNieeNumber };
+        // Existing registry members are already registered — default to 'Approved', not 'Pending',
+        // so the dashboard shows annual dues directly rather than the new-applicant registration gate.
+        if (!portalSeed.status) portalSeed.status = 'Approved';
+        await update(ref(db, `members/${uid}`), portalSeed);
+
+        document.getElementById('pwSuccessMsg').textContent =
+          `Account created! You can now log in with ${email}`;
+        showEl('pwSuccess');
+        showEl('loginPrompt');
+        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Done';
+
+      } catch (err) {
+        let msg = err.message || String(err);
+        if (err.code === 'auth/email-already-in-use') {
+          msg = 'An account already exists for this email. Please use the Login page.';
+          showEl('loginPrompt');
+        } else if (err.code === 'auth/invalid-email') {
+          msg = 'The email address is invalid.';
+        }
+        showErr('pwError', msg);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-key me-1"></i>Set Password & Create Account';
+      }
+    });
+
+  </script>
+
+</body>
+</html>

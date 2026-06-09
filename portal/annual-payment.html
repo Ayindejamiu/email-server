@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Annual Membership Payment</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="niee.css" />
+</head>
+<body>
+
+  <nav class="niee-navbar navbar mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="dashboard.html">
+        <img src="niee-logo.jpg" alt="NIEE Logo" style="width:36px;height:36px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" />
+        NIEE Portal
+      </a>
+    </div>
+  </nav>
+
+  <div class="container mt-3" style="max-width:520px;">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow rounded">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4">Complete Annual Membership Payment</h3>
+            <p class="text-center">Pay your annual membership fee for the selected year.</p>
+
+            <div class="mb-3">
+              <label for="email" class="form-label">Email Address</label>
+              <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="amount" class="form-label">Amount (NGN)</label>
+              <input type="number" id="amount" class="form-control" value="1500" readonly>
+            </div>
+
+            <div class="d-grid">
+              <button onclick="payWithPaystack()" class="btn btn-success">Pay with Paystack</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paystack SDK -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
+  <!-- Annual Payment Script -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getDatabase, ref, push, set } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2shORfx2zny40pH_ATV-VoR8NLXECAoo",
+      authDomain: "nieeportal.firebaseapp.com",
+      databaseURL: "https://nieeportal-default-rtdb.firebaseio.com",
+      projectId: "nieeportal",
+      storageBucket: "nieeportal.appspot.com",
+      messagingSenderId: "562299924853",
+      appId: "1:562299924853:web:235c52db78bc4cd141233c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Read payload from sessionStorage (if redirected from dashboard)
+    const raw = sessionStorage.getItem('niportal_payment');
+    let payload = null;
+    try { payload = raw ? JSON.parse(raw) : null; } catch (e) { payload = null; }
+
+    const emailInput = document.getElementById('email');
+    const amountInput = document.getElementById('amount');
+
+    if (payload) {
+      if (payload.email) emailInput.value = payload.email;
+      if (payload.amount) amountInput.value = payload.amount;
+    }
+
+    window.payWithPaystack = function () {
+      const email = emailInput.value;
+      const amount = parseInt(amountInput.value) * 100; // kobo
+      if (!email) return alert('Please enter your email address');
+
+      onAuthStateChanged(auth, user => {
+        if (!user) {
+          alert('You must be logged in to complete this payment. Please login and try again.');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        const writeUid = user.uid;
+        const handler = PaystackPop.setup({
+          key: 'pk_live_2c2ea20bf7c7cbdd69e4b63d26da7059998a8e8f',
+          email,
+          amount,
+          currency: 'NGN',
+          split_code: 'SPL_NNfUa4gYXW',
+          callback: function (response) {
+            // Save payment record only. Do NOT change member status (remain Approved)
+            const paymentRef = push(ref(db, `payments/${writeUid}`));
+            const stored = {
+              reference: response.reference,
+              amount: (payload?.amount ?? parseInt(amountInput.value)),
+              email,
+              date: new Date().toISOString(),
+              verified: true,
+              ...(payload?.year ? { year: payload.year } : {}),
+              ...(payload?.membershipType ? { membershipType: payload.membershipType } : {}),
+              type: 'membership'
+            };
+
+            set(paymentRef, stored)
+              .then(() => {
+                // Clear session and go back to dashboard. Do NOT change members/{uid}.status
+                sessionStorage.removeItem('niportal_payment');
+                window.location.href = 'dashboard.html';
+              })
+              .catch(err => {
+                console.error('Failed to save annual payment', err);
+                alert('Payment succeeded but saving record failed.\nError: ' + (err && err.message ? err.message : String(err)) + '\nPlease contact support.');
+              });
+          },
+          onClose: function () { alert('Transaction was not completed, window closed.'); }
+        });
+        handler.openIframe();
+      });
+    };
+  </script>
+
+</body>
+</html>

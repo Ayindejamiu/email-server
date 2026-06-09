@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login – NIEE Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+</head>
+<body>
+  <div class="niee-auth-wrapper">
+    <div class="niee-auth-card">
+
+      <div class="niee-auth-header">
+        <div style="margin:0 auto .75rem;width:70px;height:70px;background:#fff;border-radius:50%;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.2);">
+          <img src="niee-logo.jpg" alt="NIEE Logo" style="width:100%;height:100%;object-fit:contain;border-radius:50%;" />
+        </div>
+        <h4>Admin Sign In</h4>
+        <p>Restricted — NIEE Administrators Only</p>
+      </div>
+
+      <div class="niee-auth-body">
+        <form id="adminLoginForm">
+          <div class="mb-3">
+            <label for="adminEmail" class="form-label fw-600" style="font-size:.88rem;">Email Address</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-envelope text-muted" style="font-size:.9rem;"></i>
+              </span>
+              <input id="adminEmail" type="email" class="form-control border-start-0 ps-0"
+                     placeholder="admin@example.com" autocomplete="email" required />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label for="adminPassword" class="form-label fw-600" style="font-size:.88rem;">Password</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-lock text-muted" style="font-size:.9rem;"></i>
+              </span>
+              <input id="adminPassword" type="password" class="form-control border-start-0 ps-0"
+                     placeholder="Enter password" autocomplete="current-password" required />
+            </div>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-niee py-2">
+              <i class="bi bi-shield-lock me-1"></i> Sign In as Admin
+            </button>
+          </div>
+        </form>
+        <p class="text-center small text-muted mt-3 mb-0">
+          Access restricted to approved administrators.<br/>
+          <a href="login.html" class="text-niee">Member login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

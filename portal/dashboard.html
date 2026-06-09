@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Member Dashboard – NIEE Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- ── Top Navbar ─────────────────────────────────────────── -->
+  <nav class="niee-navbar navbar sticky-top">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand" href="#">
+        <img src="niee-logo.jpg" alt="NIEE Logo" style="width:36px;height:36px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;flex-shrink:0;" />
+        <span class="d-none d-sm-inline">NIEE Member Portal</span>
+        <span class="d-inline d-sm-none">NIEE</span>
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <div class="d-none d-md-block text-end me-1" style="line-height:1.2;">
+          <div id="memberName" class="text-white fw-600" style="font-size:.88rem;">—</div>
+          <div id="memberEmail" class="text-white-50" style="font-size:.75rem;">—</div>
+        </div>
+        <button id="logoutBtn" class="btn-logout btn">
+          <i class="bi bi-box-arrow-right me-1"></i><span class="d-none d-sm-inline">Logout</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Membership Status Steps ────────────────────────────── -->
+  <div style="background:#fff;border-bottom:1px solid var(--niee-border);" id="statusStepsBar">
+    <div class="container-fluid px-3">
+      <div class="niee-steps py-2">
+        <div class="niee-step" id="step1">
+          <div class="niee-step-icon"><i class="bi bi-person-check"></i></div>
+          <div class="niee-step-label">Account Created</div>
+        </div>
+        <div class="niee-step" id="step2">
+          <div class="niee-step-icon"><i class="bi bi-file-earmark-text"></i></div>
+          <div class="niee-step-label">Form Submitted</div>
+        </div>
+        <div class="niee-step" id="step3">
+          <div class="niee-step-icon"><i class="bi bi-credit-card"></i></div>
+          <div class="niee-step-label">Registration Paid</div>
+        </div>
+        <div class="niee-step" id="step4">
+          <div class="niee-step-icon"><i class="bi bi-hourglass-split"></i></div>
+          <div class="niee-step-label">Under Review</div>
+        </div>
+        <div class="niee-step" id="step5">
+          <div class="niee-step-icon"><i class="bi bi-patch-check"></i></div>
+          <div class="niee-step-label">Approved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main Layout ────────────────────────────────────────── -->
+  <div class="container-fluid px-3 py-3" style="max-width:1200px;">
+    <div class="row g-3">
+
+      <!-- ── Sidebar ──────────────────────────────────────── -->
+      <div class="col-12 col-lg-3">
+        <div class="niee-sidebar">
+          <!-- Avatar -->
+          <div class="niee-avatar" id="memberAvatar">?</div>
+          <div class="niee-sidebar-name" id="memberNameCard">—</div>
+          <div class="niee-sidebar-meta" id="memberType">—</div>
+          <div class="text-center mt-2">
+            <span id="memberStatus" class="status-badge status-pending">Pending</span>
+          </div>
+
+          <div class="niee-sidebar-divider"></div>
+
+          <!-- Quick info -->
+          <div class="niee-sidebar-item">
+            <i class="bi bi-telephone text-niee"></i>
+            <span id="sidebarPhone" class="text-muted">—</span>
+          </div>
+          <div class="niee-sidebar-item">
+            <i class="bi bi-geo-alt text-niee"></i>
+            <span id="sidebarChapter" class="text-muted">—</span>
+          </div>
+          <div class="niee-sidebar-item">
+            <i class="bi bi-calendar3 text-niee"></i>
+            <span id="sidebarJoined" class="text-muted">—</span>
+          </div>
+
+          <div class="niee-sidebar-divider"></div>
+
+          <!-- Nav links -->
+          <nav class="d-flex flex-column gap-1">
+            <a href="#section-profile"  class="btn btn-sm btn-niee-outline text-start px-3 py-2 nav-pill active-pill" onclick="showSection('profile',this)">
+              <i class="bi bi-person me-2"></i>My Profile
+            </a>
+            <a href="#section-payments" class="btn btn-sm btn-niee-outline text-start px-3 py-2 nav-pill" onclick="showSection('payments',this)">
+              <i class="bi bi-wallet2 me-2"></i>Payments
+            </a>
+            <a href="#section-history"  class="btn btn-sm btn-niee-outline text-start px-3 py-2 nav-pill" onclick="showSection('history',this)">
+              <i class="bi bi-clock-history me-2"></i>Payment History
+            </a>
+            <a href="#section-certificate" id="certNavLink" class="btn btn-sm btn-niee-outline text-start px-3 py-2 nav-pill d-none" onclick="showSection('certificate',this)">
+              <i class="bi bi-award me-2"></i>My Certificate
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- ── Main Content ───────────────────────────────── -->
+      <div class="col-12 col-lg-9">
+
+        <!-- ══ PROFILE SECTION ══════════════════════════════ -->
+        <div id="section-profile">
+
+          <!-- Personal Information Card -->
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-person-lines-fill"></i> Personal Information</h6>
+              <button class="btn btn-sm btn-niee-outline" onclick="openEditModal('personal')">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+            </div>
+            <div class="niee-card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <label>Full Name</label>
+                  <span id="memberNameHeader">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Email</label>
+                  <span id="memberEmailHeader" style="word-break:break-all;">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Phone</label>
+                  <span id="memberPhone">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Date of Birth</label>
+                  <span id="memberDOB">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Gender</label>
+                  <span id="memberGender">—</span>
+                </div>
+                <div class="info-item">
+                  <label>State</label>
+                  <span id="memberState">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Country</label>
+                  <span id="memberCountry">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Nationality</label>
+                  <span id="memberNationality">—</span>
+                </div>
+                <div class="info-item" style="grid-column:1/-1;">
+                  <label>Address</label>
+                  <span id="memberAddress">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Membership No.</label>
+                  <span id="memberMembershipNumber">—</span>
+                </div>
+                <div class="info-item">
+                  <label>Chapter</label>
+                  <span id="memberChapter">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Education Card -->
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-mortarboard"></i> Education</h6>
+              <button class="btn btn-sm btn-niee-outline" onclick="openEditModal('education')">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+            </div>
+            <div class="niee-card-body">
+              <ul id="educationList" class="list-unstyled mb-0" style="font-size:.9rem;"></ul>
+            </div>
+          </div>
+
+          <!-- Experience Card -->
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-briefcase"></i> Work Experience</h6>
+              <button class="btn btn-sm btn-niee-outline" onclick="openEditModal('experience')">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+            </div>
+            <div class="niee-card-body">
+              <ul id="experienceList" class="list-unstyled mb-0" style="font-size:.9rem;"></ul>
+            </div>
+          </div>
+
+          <!-- Next of Kin & Reference side-by-side -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="niee-card" style="height:100%;">
+                <div class="niee-card-header">
+                  <h6><i class="bi bi-people"></i> Next of Kin</h6>
+                </div>
+                <div class="niee-card-body">
+                  <div id="nextOfKinInfo" style="font-size:.88rem;color:var(--niee-muted);">—</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="niee-card" style="height:100%;">
+                <div class="niee-card-header">
+                  <h6><i class="bi bi-person-badge"></i> Reference</h6>
+                  <button class="btn btn-sm btn-niee-outline" onclick="openEditModal('reference')">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                  </button>
+                </div>
+                <div class="niee-card-body">
+                  <div id="referenceInfo" style="font-size:.88rem;color:var(--niee-muted);">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /section-profile -->
+
+        <!-- ══ PAYMENTS SECTION ══════════════════════════════ -->
+        <div id="section-payments" style="display:none;">
+
+          <!-- Registration Fee Card (one-time) -->
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-receipt"></i> Registration Fee <span class="niee-brand-badge ms-1">ONE-TIME</span></h6>
+              <span id="regFeeStatusBadge" class="status-badge status-pending" style="display:none;"></span>
+            </div>
+            <div class="niee-card-body">
+              <div class="row align-items-center g-3">
+                <div class="col-md-6">
+                  <div style="font-size:.88rem;color:var(--niee-muted);">
+                    A one-time <strong>₦1,000</strong> registration fee is required before your application is reviewed.
+                    This fee is paid once and will never be charged again.
+                  </div>
+                </div>
+                <div class="col-md-6" id="regFeeActionCol">
+                  <!-- Populated by auth.js via #paymentYears wrapper -->
+                  <div id="regFeeAction" class="text-center">
+                    <div class="spinner-border spinner-border-sm text-muted" role="status"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annual Dues Card -->
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-calendar-check"></i> Annual Membership Dues <span class="niee-brand-badge ms-1">RECURRING</span></h6>
+              <span id="annualFeeStatusBadge" class="status-badge" style="display:none;"></span>
+            </div>
+            <div class="niee-card-body">
+              <div id="annualFeeInfo" class="mb-3" style="font-size:.88rem;color:var(--niee-muted);">
+                Annual dues are based on your approved membership grade and are due each year.
+              </div>
+              <!-- auth.js renders payment action cards here -->
+              <div id="paymentYears" class="row g-3"></div>
+            </div>
+          </div>
+
+          <!-- Upcoming payment notice -->
+          <div class="niee-card d-none" id="upcomingPaymentCard">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-bell"></i> Upcoming Payment</h6>
+            </div>
+            <div class="niee-card-body" id="upcomingPaymentBody" style="font-size:.88rem;"></div>
+          </div>
+
+        </div><!-- /section-payments -->
+
+        <!-- ══ PAYMENT HISTORY SECTION ══════════════════════ -->
+        <div id="section-history" style="display:none;">
+          <div class="niee-card d-none" id="paymentHistory">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-clock-history"></i> Payment History</h6>
+            </div>
+            <div class="niee-card-body p-0">
+              <div class="table-responsive">
+                <table class="table niee-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Reference</th>
+                      <th>Amount</th>
+                      <th>Year</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Receipt</th>
+                    </tr>
+                  </thead>
+                  <tbody id="paymentTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="noPaymentHistory" class="text-center py-5 text-muted">
+            <i class="bi bi-wallet2" style="font-size:2rem;opacity:.3;"></i>
+            <div class="mt-2">No payments recorded yet.</div>
+          </div>
+        </div><!-- /section-history -->
+
+        <!-- ══ CERTIFICATE SECTION ══════════════════════════ -->
+        <div id="section-certificate" style="display:none;">
+          <div class="niee-card">
+            <div class="niee-card-header">
+              <h6><i class="bi bi-award-fill text-niee"></i> Membership Certificate</h6>
+            </div>
+            <div class="niee-card-body">
+
+              <!-- Preview banner -->
+              <div style="background:linear-gradient(135deg,#006633 60%,#004d26 100%);border-radius:10px;padding:28px 24px;color:#fff;margin-bottom:20px;">
+                <div style="font-size:.72rem;letter-spacing:2px;opacity:.7;text-transform:uppercase;margin-bottom:6px;">Nigerian Institution of Environmental Engineers</div>
+                <div style="font-size:1.4rem;font-weight:700;letter-spacing:1px;">Certificate of Membership</div>
+                <div style="margin-top:14px;font-size:.88rem;opacity:.85;">
+                  <span id="certPreviewName" style="font-weight:600;"></span><br>
+                  <span id="certPreviewType" style="opacity:.8;"></span> &nbsp;&middot;&nbsp;
+                  NIEE No: <span id="certPreviewNo" style="font-family:monospace;"></span>
+                </div>
+              </div>
+
+              <p class="text-muted mb-3" style="font-size:.85rem;">
+                <i class="bi bi-info-circle me-1"></i>
+                The downloaded PDF includes your name, membership grade, NIEE number, date of approval, and a QR code that anyone can scan to verify your membership online.
+              </p>
+
+              <button class="btn btn-niee" id="downloadCertBtn">
+                <i class="bi bi-file-earmark-arrow-down me-2"></i>Download Certificate (PDF)
+              </button>
+
+            </div>
+          </div>
+        </div><!-- /section-certificate -->
+
+      </div><!-- /main content -->
+    </div><!-- /row -->
+  </div><!-- /container -->
+
+  <!-- ── "Pay Membership Fee" quick-action (hidden anchor for auth.js) -->
+  <!-- auth.js controls #payMembershipBtn — keep it in DOM but not visible here -->
+  <button id="payMembershipBtn" class="d-none">Pay Membership Fee</button>
+
+  <!-- ══ EDIT PROFILE MODAL ════════════════════════════════════ -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content" style="border-radius:var(--radius);">
+        <div class="modal-header" style="background:var(--niee-green-light);border-bottom:1px solid var(--niee-border);">
+          <h5 class="modal-title fw-700 text-niee" id="editModalTitle">Edit Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editProfileForm">
+
+            <!-- ── Personal section ─── -->
+            <div data-section="personal">
+              <div class="section-title">Personal Details</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">First Name</label>
+                  <input id="editFirstName" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Last Name</label>
+                  <input id="editLastName" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Phone</label>
+                  <input id="editPhone" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Membership Type</label>
+                  <input id="editMembershipType" class="form-control form-control-sm" readonly
+                         title="Membership type is set by admin approval">
+                </div>
+                <div class="col-12">
+                  <label class="form-label form-label-sm">Address</label>
+                  <input id="editAddress" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">State</label>
+                  <input id="editState" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">Country</label>
+                  <input id="editCountry" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">Nationality</label>
+                  <input id="editNationality" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Other Membership Numbers</label>
+                  <input id="editMembershipNumber" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Chapter</label>
+                  <input id="editChapter" class="form-control form-control-sm">
+                </div>
+
+                <div class="col-12 mt-2">
+                  <div class="section-title">Next of Kin</div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">First Name</label>
+                  <input id="editNextFirstName" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">Last Name</label>
+                  <input id="editNextLastName" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm">Phone</label>
+                  <input id="editNextPhone" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Email</label>
+                  <input id="editNextEmail" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Relationship</label>
+                  <input id="editNextRelationship" class="form-control form-control-sm">
+                </div>
+
+                <!-- Profile picture (disabled until Storage enabled) -->
+                <div class="col-12 d-none">
+                  <input id="editProfilePicture" type="file" accept="image/png,image/jpeg" class="form-control" disabled>
+                  <div id="editProfileProgress" class="progress mt-1" style="height:4px;display:none;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width:0%"></div>
+                  </div>
+                  <img id="currentProfileImg" src="" alt="profile" class="img-thumbnail mt-1" style="max-width:80px;display:none;">
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Education section ─── -->
+            <div data-section="education" style="display:none;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="section-title mb-0">Education History</div>
+                <button id="addEditEducationRow" type="button" class="btn btn-sm btn-niee-outline">
+                  <i class="bi bi-plus me-1"></i>Add Row
+                </button>
+              </div>
+              <div class="small text-muted mb-2">Fill in Institution, Degree, Discipline, and Dates for each entry.</div>
+              <div id="editEducationContainer"></div>
+            </div>
+
+            <!-- ── Experience section ─── -->
+            <div data-section="experience" style="display:none;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="section-title mb-0">Work Experience</div>
+                <button id="addEditExperienceRow" type="button" class="btn btn-sm btn-niee-outline">
+                  <i class="bi bi-plus me-1"></i>Add Row
+                </button>
+              </div>
+              <div class="small text-muted mb-2">Fill in Job Title, Duties, Date, Employer, and Employer's Address.</div>
+              <div id="editExperienceContainer"></div>
+            </div>
+
+            <!-- ── Reference section ─── -->
+            <div data-section="reference" style="display:none;">
+              <div class="section-title">Professional Reference</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Referee Name</label>
+                  <input id="editRefName" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Referee Email</label>
+                  <input id="editRefEmail" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Referee Phone</label>
+                  <input id="editRefPhone" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Referee Member ID</label>
+                  <input id="editRefMemberId" class="form-control form-control-sm">
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--niee-border);">
+          <button id="saveProfileBtn" type="button" class="btn btn-niee">
+            <i class="bi bi-check-lg me-1"></i>Save Changes
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer class="niee-footer mt-4">
+    Nigerian Institution of Environmental Engineers (NIEE) &nbsp;·&nbsp; Member Portal &nbsp;·&nbsp;
+    &copy; <span id="footerYear"></span> NIEE
+  </footer>
+
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    // ── Section switcher ─────────────────────────────────────
+    function showSection(name, clickedEl) {
+      ['profile','payments','history','certificate'].forEach(s => {
+        const el = document.getElementById('section-' + s);
+        if (el) el.style.display = (s === name) ? '' : 'none';
+      });
+      document.querySelectorAll('.nav-pill').forEach(a => a.classList.remove('active-pill'));
+      if (clickedEl) clickedEl.classList.add('active-pill');
+      return false;
+    }
+
+    // Style active nav pill
+    const style = document.createElement('style');
+    style.textContent = `
+      .nav-pill { color: var(--niee-green) !important; border-color: var(--niee-border) !important; }
+      .nav-pill.active-pill { background: var(--niee-green) !important; border-color: var(--niee-green) !important; color: #fff !important; }
+      .nav-pill:hover:not(.active-pill) { background: var(--niee-green-light) !important; }
+    `;
+    document.head.appendChild(style);
+
+    // Update edit modal title based on section
+    function openEditModal(section) {
+      const titles = {
+        personal: 'Edit Personal Information',
+        education: 'Edit Education History',
+        experience: 'Edit Work Experience',
+        reference: 'Edit Reference'
+      };
+      const titleEl = document.getElementById('editModalTitle');
+      if (titleEl) titleEl.textContent = titles[section] || 'Edit Profile';
+    }
+  </script>
+  <script type="module" src="auth.js"></script>
+</body>
+</html>
