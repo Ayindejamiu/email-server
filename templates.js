@@ -1,5 +1,5 @@
 const PORTAL_URL = process.env.PORTAL_URL || 'https://nieeportal.firebaseapp.com';
-const LOGO_URL = 'https://nieeportal.firebaseapp.com/niee-logo.jpg';
+const LOGO_URL = process.env.LOGO_URL || 'https://nieeportal.firebaseapp.com/assets/img/niee.jpg';
 
 const baseStyle = `
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -22,7 +22,8 @@ function wrapper(content) {
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563a8 100%);padding:32px 40px;text-align:center;">
-            <p style="color:#ffffff;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Nigerian Institute of Electrical &amp; Electronic Engineers</p>
+            <img src="${LOGO_URL}" alt="NIEE Logo" width="80" height="80" style="display:block;margin:0 auto 14px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3);" />
+            <p style="color:#ffffff;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Nigerian Institution of Environmental Engineers</p>
             <h1 style="color:#ffffff;font-size:26px;font-weight:700;margin:0;letter-spacing:0.5px;">NIEE Portal</h1>
           </td>
         </tr>
@@ -33,7 +34,7 @@ function wrapper(content) {
         <!-- Footer -->
         <tr>
           <td style="background:#f8f9fb;border-top:1px solid #e8ecf0;padding:24px 40px;text-align:center;">
-            <p style="color:#6b7280;font-size:12px;margin:0 0 6px;">Nigerian Institute of Electrical &amp; Electronic Engineers</p>
+            <p style="color:#6b7280;font-size:12px;margin:0 0 6px;">Nigerian Institution of Environmental Engineers</p>
             <p style="color:#9ca3af;font-size:11px;margin:0;">This is an automated notification. Please do not reply to this email.</p>
             <p style="margin:12px 0 0;">
               <a href="${PORTAL_URL}" style="color:#2563a8;font-size:12px;text-decoration:none;">Visit Portal</a>
@@ -103,7 +104,7 @@ function approvedEmail({ firstName, lastName, membershipType, nieeNumber }) {
       <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎉</div>
     </div>
     <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Congratulations! Membership Approved</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Welcome to the Nigerian Institute of Electrical &amp; Electronic Engineers.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Welcome to the Nigerian Institution of Environmental Engineers.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
