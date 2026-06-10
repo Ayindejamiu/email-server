@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NIEE – Nigerian Institution of Environmental Engineers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+</head>
+<body style="background:#fff;">
+
+  <!-- Navbar -->
+  <nav class="niee-navbar navbar">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img src="niee-logo.jpg" alt="NIEE Logo" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" />
+        Nigerian Institution of Environmental Engineers
+      </a>
+      <div class="d-flex gap-2">
+        <a href="member-update.html" class="btn btn-sm px-3" style="color:#fff;border:1px solid rgba(255,255,255,.4);">Update Info</a>
+        <a href="login.html"    class="btn-niee-outline btn btn-sm px-3">Login</a>
+        <a href="register.html" class="btn-niee       btn btn-sm px-3">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="niee-hero">
+    <div class="container position-relative" style="z-index:1;">
+      <div class="row align-items-center gy-4">
+        <div class="col-lg-7">
+          <div class="niee-brand-badge mb-3">Est. 1995 · NIEE Portal</div>
+          <h1 class="niee-hero-title">Your Professional Home as an Environmental Engineer</h1>
+          <p class="niee-hero-sub mb-4">
+            Manage your membership, pay dues, access resources, and stay connected
+            with the NIEE community — all in one place.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="register.html" class="btn btn-light fw-600 px-4 py-2" style="color:var(--niee-green-dark);font-weight:700;">
+              <i class="bi bi-person-plus me-1"></i> Become a Member
+            </a>
+            <a href="login.html" class="btn btn-outline-light fw-600 px-4 py-2">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Member Login
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-5 text-center d-none d-lg-block">
+          <div style="background:rgba(255,255,255,.12);border-radius:20px;padding:2rem 2.5rem;display:inline-block;backdrop-filter:blur(4px);">
+            <img src="niee-logo.jpg" alt="NIEE Logo" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 6px 20px rgba(0,0,0,.3));" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Membership Tiers -->
+  <section class="py-5 bg-white">
+    <div class="container">
+      <div class="text-center mb-4">
+        <div class="section-title">Membership Categories</div>
+        <h2 class="h4 fw-bold text-niee">Find Your Grade</h2>
+      </div>
+      <div class="row g-3 justify-content-center">
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-green-light);border:1px solid var(--niee-border);">
+            <div style="font-size:1.5rem;">🎓</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:var(--niee-green-dark);">Student</div>
+            <div class="small text-muted">₦500/yr</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-green-light);border:1px solid var(--niee-border);">
+            <div style="font-size:1.5rem;">📋</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:var(--niee-green-dark);">Graduate</div>
+            <div class="small text-muted">₦1,000/yr</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-green-light);border:1px solid var(--niee-border);">
+            <div style="font-size:1.5rem;">🏅</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:var(--niee-green-dark);">Associate</div>
+            <div class="small text-muted">₦2,000/yr</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-green-light);border:1px solid var(--niee-border);">
+            <div style="font-size:1.5rem;">⚙️</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:var(--niee-green-dark);">Corporate Member</div>
+            <div class="small text-muted">₦5,000/yr</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-green-light);border:1px solid var(--niee-border);">
+            <div style="font-size:1.5rem;">🎖️</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:var(--niee-green-dark);">Fellow</div>
+            <div class="small text-muted">₦10,000/yr</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded-3 h-100" style="background:var(--niee-gold-light);border:1px solid #f0d99a;">
+            <div style="font-size:1.5rem;">🏢</div>
+            <div class="fw-700 mt-1" style="font-size:.88rem;color:#7a5a00;">Corporate Organization Member</div>
+            <div class="small text-muted">₦20,000/yr</div>
+          </div>
+        </div>
+      </div>
+      <p class="text-center small text-muted mt-3">
+        All categories require a one-time registration fee of <strong>₦1,000</strong>
+      </p>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="py-5" style="background:var(--niee-bg);">
+    <div class="container">
+      <div class="text-center mb-4">
+        <div class="section-title">How it Works</div>
+        <h2 class="h4 fw-bold text-niee">Simple 4-Step Process</h2>
+      </div>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-3">
+          <div class="text-center">
+            <div class="niee-feature-icon mx-auto" style="background:var(--niee-green-light);">
+              <i class="bi bi-person-plus text-niee" style="font-size:1.3rem;"></i>
+            </div>
+            <div class="fw-700 mb-1">1. Create Account</div>
+            <p class="small text-muted mb-0">Register with your email and set a secure password.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="text-center">
+            <div class="niee-feature-icon mx-auto" style="background:var(--niee-green-light);">
+              <i class="bi bi-file-earmark-text text-niee" style="font-size:1.3rem;"></i>
+            </div>
+            <div class="fw-700 mb-1">2. Fill Application</div>
+            <p class="small text-muted mb-0">Submit your professional background, education, and experience.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="text-center">
+            <div class="niee-feature-icon mx-auto" style="background:var(--niee-green-light);">
+              <i class="bi bi-credit-card text-niee" style="font-size:1.3rem;"></i>
+            </div>
+            <div class="fw-700 mb-1">3. Pay Registration</div>
+            <p class="small text-muted mb-0">Pay the one-time ₦1,000 registration fee securely via Paystack.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="text-center">
+            <div class="niee-feature-icon mx-auto" style="background:var(--niee-green-light);">
+              <i class="bi bi-patch-check text-niee" style="font-size:1.3rem;"></i>
+            </div>
+            <div class="fw-700 mb-1">4. Get Approved</div>
+            <p class="small text-muted mb-0">Await admin review. Once approved, pay your annual membership due.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section style="background:var(--niee-green);color:#fff;padding:3rem 1rem;text-align:center;">
+    <div class="container">
+      <h2 class="h3 fw-bold mb-2">Ready to Join NIEE?</h2>
+      <p class="mb-4" style="opacity:.88;">Join thousands of environmental engineering professionals across Nigeria.</p>
+      <a href="register.html" class="btn btn-light fw-bold px-5 py-2" style="color:var(--niee-green-dark);">
+        Start Your Application
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="niee-footer">
+    <div class="container">
+      <strong style="color:#fff;">Nigerian Institution of Environmental Engineers (NIEE)</strong><br/>
+      Membership Portal &nbsp;·&nbsp; &copy; <span id="footerYear"></span> NIEE. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
+</body>
+</html>
