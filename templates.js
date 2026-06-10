@@ -167,7 +167,7 @@ function rejectedEmail({ firstName, lastName, membershipType, rejectionReason })
       <div style="display:inline-block;background:#fee2e2;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📄</div>
     </div>
     <h2 style="color:#991b1b;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Application Update</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Regarding your NIEE membership application.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Regarding your Nigerian Institution of Environmental Engineers membership application.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -207,7 +207,7 @@ function reminderPendingEmail({ firstName, lastName, membershipType }) {
       <div style="display:inline-block;background:#fef3c7;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">⏳</div>
     </div>
     <h2 style="color:#92400e;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Your Application is Incomplete</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Action is required to proceed with your NIEE membership.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Action is required to proceed with your Nigerian Institution of Environmental Engineers (NIEE) membership.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -249,7 +249,7 @@ function reminderRegisteredEmail({ firstName, lastName, membershipType }) {
       <div style="display:inline-block;background:#dbeafe;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📋</div>
     </div>
     <h2 style="color:#1e40af;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Application Still Under Review</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">We are still processing your NIEE membership application.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">We are still processing your Nigerian Institution of Environmental Engineers (NIEE) membership application.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -288,7 +288,7 @@ function reminderApprovedEmail({ firstName, lastName, membershipType, nieeNumber
       <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🔔</div>
     </div>
     <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Reminder: Activate Your Membership</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Your membership has been approved — one step remaining.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Your Nigerian Institution of Environmental Engineers (NIEE) membership has been approved — one step remaining.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -326,7 +326,7 @@ function reminderRejectedEmail({ firstName, lastName, membershipType, rejectionR
       <div style="display:inline-block;background:#fee2e2;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📩</div>
     </div>
     <h2 style="color:#991b1b;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Follow-Up on Your Application</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Regarding your NIEE membership application.</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Regarding your Nigerian Institution of Environmental Engineers (NIEE) membership application.</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
