@@ -358,7 +358,90 @@ function reminderRejectedEmail({ firstName, lastName, membershipType, rejectionR
   return { subject: 'Follow-Up: Your NIEE Membership Application | NIEE Portal', html: wrapper(body) };
 }
 
+// ── Event: Fadahunsi Memorial Lecture registration confirmation ───────────────
+function fadahunsiRegistrationEmail({ name, registrationCode, sex, isNieeMember }) {
+  const salutation = sex === 'Female' ? 'Ms.' : 'Mr.';
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎓</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">9th Fadahunsi Memorial Lecture — In Honour of Late Chief Pa Fadahunsi</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${salutation} ${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your registration for the <strong>9th Fadahunsi Memorial Lecture</strong> has been successfully received.
+      Please find your registration details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Registration Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${registrationCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Please present this code at the event venue</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Event</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">9th Fadahunsi Memorial Lecture</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Saturday, 22nd August 2026</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Engr. G. O Aiwerioba Engineering Centre<br>184 Ekenwan Road, Benin City</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Entry</p>
+          <p style="color:#059669;font-size:15px;font-weight:700;margin:0;">Free</p>
+        </td>
+      </tr>
+    </table>
+
+    ${isNieeMember === 'Yes' ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:4px;padding:16px 20px;margin:0 0 24px;">
+      <tr>
+        <td>
+          <p style="color:#1e40af;font-size:14px;font-weight:600;margin:0 0 4px;">NIEE Member</p>
+          <p style="color:#374151;font-size:14px;line-height:1.6;margin:0;">
+            As an NIEE member, kindly bring your membership card or quote your NIEE number at the venue.
+          </p>
+        </td>
+      </tr>
+    </table>` : ''}
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      We look forward to welcoming you. For enquiries, contact the NIEE Secretariat.
+    </p>
+
+    <div style="text-align:center;">
+      <a href="https://nieeportal.web.app/portal/event-fadahunsi.html"
+         style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 32px;border-radius:6px;">
+        View Event Details
+      </a>
+    </div>
+  `;
+  return {
+    subject: `Registration Confirmed – ${registrationCode} | 9th Fadahunsi Memorial Lecture`,
+    html: wrapper(body)
+  };
+}
+
 module.exports = {
   registeredEmail, approvedEmail, rejectedEmail,
-  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail
+  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
+  fadahunsiRegistrationEmail
 };
