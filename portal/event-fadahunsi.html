@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>9th Fadahunsi Memorial Lecture – NIEE</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="niee.css" />
+  <style>
+    body { background: var(--niee-bg); }
+
+    .event-hero {
+      background: linear-gradient(135deg, var(--niee-green-dark) 0%, var(--niee-green) 100%);
+      color: #fff;
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+    .event-hero .logo-wrap {
+      width: 80px; height: 80px;
+      background: #fff;
+      border-radius: 50%;
+      padding: 5px;
+      margin: 0 auto 1.25rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    }
+    .event-hero .logo-wrap img {
+      width: 100%; height: 100%; object-fit: contain; border-radius: 50%;
+    }
+    .event-hero .org-name {
+      font-size: .78rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: .85;
+      margin-bottom: .35rem;
+    }
+    .event-hero h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: .5rem;
+    }
+    .event-hero .subtitle {
+      font-size: 1rem;
+      opacity: .88;
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .75rem 1.5rem;
+    }
+    .event-meta .meta-item {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .9rem;
+      background: rgba(255,255,255,.12);
+      border-radius: 6px;
+      padding: .4rem .9rem;
+    }
+    .event-meta .meta-item i { font-size: 1rem; }
+
+    .free-badge {
+      display: inline-block;
+      background: var(--niee-gold);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: .25rem .8rem;
+      border-radius: 20px;
+      margin-top: 1.25rem;
+    }
+
+    .form-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 2rem;
+      max-width: 560px;
+      margin: -1.5rem auto 2.5rem;
+      position: relative;
+    }
+    .form-card h5 {
+      color: var(--niee-green-dark);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid var(--niee-border);
+    }
+
+    .btn-niee-event {
+      background: var(--niee-green);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      padding: .7rem 1.5rem;
+      width: 100%;
+      font-size: 1rem;
+      transition: background .2s;
+    }
+    .btn-niee-event:hover { background: var(--niee-green-dark); color: #fff; }
+
+    .success-box {
+      display: none;
+      background: var(--niee-green-light);
+      border: 1.5px solid var(--niee-green);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .success-box i { font-size: 3rem; color: var(--niee-green); margin-bottom: 1rem; }
+    .success-box h5 { color: var(--niee-green-dark); font-weight: 700; }
+
+    .footer-note {
+      text-align: center;
+      color: var(--niee-muted);
+      font-size: .8rem;
+      padding-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero / Event Banner -->
+  <div class="event-hero">
+    <div class="logo-wrap">
+      <img src="niee-logo.jpg" alt="NIEE Logo" />
+    </div>
+    <div class="org-name">Nigerian Institution of Environmental Engineers</div>
+    <h1>9th Fadahunsi Memorial Lecture</h1>
+    <p class="subtitle">In Honour of Late Chief Pa Fadahunsi</p>
+
+    <div class="event-meta">
+      <div class="meta-item">
+        <i class="bi bi-calendar-event"></i>
+        Saturday, 22nd August 2026
+      </div>
+      <div class="meta-item">
+        <i class="bi bi-geo-alt-fill"></i>
+        Engr. G. O Aiwerioba Engineering Centre
+      </div>
+      <div class="meta-item">
+        <i class="bi bi-pin-map"></i>
+        184 Ekenwan Road, Benin City
+      </div>
+    </div>
+
+    <div class="free-badge"><i class="bi bi-ticket-perforated me-1"></i>Free Entry</div>
+  </div>
+
+  <!-- Registration Form -->
+  <div class="container px-3">
+    <div class="form-card">
+
+      <!-- Success state -->
+      <div class="success-box" id="successBox">
+        <i class="bi bi-check-circle-fill"></i>
+        <h5>Registration Successful!</h5>
+        <p class="text-muted mb-2">Your registration code is:</p>
+        <div style="background:#fff;border:2px solid var(--niee-green);border-radius:8px;padding:14px 24px;display:inline-block;margin-bottom:16px;">
+          <span id="regCodeDisplay" style="font-size:2rem;font-weight:800;letter-spacing:4px;color:var(--niee-green-dark);font-family:monospace;"></span>
+        </div>
+        <p class="text-muted mb-0" style="font-size:.9rem;">A confirmation email with your code has been sent to your email address.<br>Please present this code at the venue on <strong>22nd August 2026</strong>.</p>
+      </div>
+
+      <!-- Form -->
+      <div id="formWrap">
+        <h5><i class="bi bi-pencil-square me-2"></i>Register to Attend</h5>
+
+        <form id="eventRegForm" novalidate>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="regName">Full Name <span class="text-danger">*</span></label>
+            <input type="text" id="regName" class="form-control" placeholder="Enter your full name" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="regPhone">Phone Number <span class="text-danger">*</span></label>
+            <input type="tel" id="regPhone" class="form-control" placeholder="e.g. 08012345678" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="regEmail">Email Address <span class="text-danger">*</span></label>
+            <input type="email" id="regEmail" class="form-control" placeholder="your@email.com" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="regSex">Sex <span class="text-danger">*</span></label>
+            <select id="regSex" class="form-select" required>
+              <option value="">— Select —</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Are you an NIEE Member? <span class="text-danger">*</span></label>
+            <div class="d-flex gap-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="nieeStatus" id="nieeYes" value="Yes" required />
+                <label class="form-check-label" for="nieeYes">Yes</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="nieeStatus" id="nieeNo" value="No" />
+                <label class="form-check-label" for="nieeNo">No</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="formError" class="alert alert-danger d-none py-2"></div>
+
+          <button type="submit" class="btn-niee-event" id="submitBtn">
+            <i class="bi bi-check2-circle me-2"></i>Complete Registration
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <p class="footer-note">
+      &copy; 2026 Nigerian Institution of Environmental Engineers &nbsp;|&nbsp;
+      <a href="../index.html" class="text-muted">niee.org.ng</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { initializeApp }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getDatabase, ref, push, set, runTransaction }
+                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyA2shORfx2zny40pH_ATV-VoR8NLXECAoo",
+      authDomain:        "nieeportal.firebaseapp.com",
+      databaseURL:       "https://nieeportal-default-rtdb.firebaseio.com",
+      projectId:         "nieeportal",
+      storageBucket:     "nieeportal.appspot.com",
+      messagingSenderId: "562299924853",
+      appId:             "1:562299924853:web:235c52db78bc4cd141233c"
+    };
+
+    const EMAIL_SERVER = 'https://email-server-t67z.onrender.com';
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+
+    const form      = document.getElementById('eventRegForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorBox  = document.getElementById('formError');
+
+    function padCode(n) {
+      return 'FML' + String(n).padStart(5, '0');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.add('d-none');
+
+      const name       = document.getElementById('regName').value.trim();
+      const phone      = document.getElementById('regPhone').value.trim();
+      const email      = document.getElementById('regEmail').value.trim();
+      const sex        = document.getElementById('regSex').value;
+      const nieeStatus = document.querySelector('input[name="nieeStatus"]:checked')?.value;
+
+      if (!name || !phone || !email || !sex || !nieeStatus) {
+        errorBox.textContent = 'Please fill in all required fields.';
+        errorBox.classList.remove('d-none');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting…';
+
+      try {
+        // Generate sequential registration code via atomic counter
+        const counterRef = ref(db, 'events/fadahunsi-memorial-2026-counter');
+        const { snapshot } = await runTransaction(counterRef, current => (current || 0) + 1);
+        const registrationCode = padCode(snapshot.val());
+
+        // Save registration
+        const regRef = push(ref(db, 'events/fadahunsi-memorial-2026'));
+        await set(regRef, {
+          name,
+          phone,
+          email,
+          sex,
+          isNieeMember: nieeStatus,
+          registrationCode,
+          registeredAt: new Date().toISOString()
+        });
+
+        // Send confirmation email (fire-and-forget — don't block on failure)
+        fetch(`${EMAIL_SERVER}/api/send-event-registration-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, registrationCode, sex, isNieeMember: nieeStatus })
+        }).catch(err => console.warn('Email send failed:', err));
+
+        // Show success screen with code
+        document.getElementById('regCodeDisplay').textContent = registrationCode;
+        document.getElementById('formWrap').style.display = 'none';
+        document.getElementById('successBox').style.display = 'block';
+
+      } catch (err) {
+        errorBox.textContent = 'Registration failed. Please try again. (' + (err.message || err) + ')';
+        errorBox.classList.remove('d-none');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Complete Registration';
+      }
+    });
+  </script>
+
+</body>
+</html>

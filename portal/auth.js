@@ -1028,7 +1028,8 @@ window.addEventListener('DOMContentLoaded', () => {
     else if (type.includes('graduate'))                templateFile = 'cert-graduate.jpg';
     else if (type.includes('student'))                 templateFile = 'cert-student.jpg';
     else if (type.includes('organization'))            templateFile = 'cert-corporate.jpg';
-    else if (type.includes('corporate') || type.includes('associate') || type.includes('member')) templateFile = 'cert-corporate.jpg';
+    else if (type.includes('associate'))               templateFile = 'cert-associate.jpg';
+    else if (type.includes('corporate') || type.includes('member')) templateFile = 'cert-corporate.jpg';
 
     // ── Load certificate template image ────────────────────────
     let templateDataUrl = null;
@@ -1472,6 +1473,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <td class="align-middle">
           <button class="btn btn-sm btn-outline-primary me-1" data-uid="${uid}" data-action="view">View</button>
           <button class="btn btn-sm btn-outline-success me-1" data-uid="${uid}" data-action="payments">Payments</button>
+          <button class="btn btn-sm btn-outline-secondary me-1" data-uid="${uid}" data-action="mark-annual-paid" title="Record manual annual dues payment"><i class="bi bi-cash-coin me-1"></i>Mark Paid</button>
           <button class="btn btn-sm btn-outline-warning me-1" data-uid="${uid}" data-action="remind" title="Send reminder email based on current status"><i class="bi bi-bell me-1"></i>Remind</button>
           <button class="btn btn-sm btn-danger" data-uid="${uid}" data-action="reject">Reject</button>
         </td>
@@ -1591,6 +1593,60 @@ window.addEventListener('DOMContentLoaded', () => {
                   </div>`;
               }
             }
+            return;
+          }
+          if (action === 'mark-annual-paid') {
+            const name = `${member.firstName||''} ${member.lastName||''}`.trim() || uid;
+            const currentYear = new Date().getFullYear();
+            const years = Array.from({length: 5}, (_, i) => currentYear - i);
+            const feeAmount = membershipFees[member.membershipType] || 0;
+
+            document.getElementById('manualPayMemberName').textContent  = name;
+            document.getElementById('manualPayMemberType').textContent  = member.membershipType || '—';
+            document.getElementById('manualPayAmount').value            = feeAmount;
+            document.getElementById('manualPayReference').value         = '';
+            document.getElementById('manualPayNote').value              = '';
+            const yearSel = document.getElementById('manualPayYear');
+            yearSel.innerHTML = years.map(y => `<option value="${y}"${y===currentYear?' selected':''}>${y}</option>`).join('');
+
+            const modal = new bootstrap.Modal(document.getElementById('manualAnnualPayModal'));
+            modal.show();
+
+            document.getElementById('manualPaySaveBtn').onclick = async () => {
+              const ref_no = document.getElementById('manualPayReference').value.trim();
+              const year   = Number(yearSel.value);
+              const amount = Number(document.getElementById('manualPayAmount').value) || feeAmount;
+              const note   = document.getElementById('manualPayNote').value.trim();
+
+              if (!ref_no) { alert('Please enter a transaction reference number.'); return; }
+
+              const saveBtn = document.getElementById('manualPaySaveBtn');
+              saveBtn.disabled = true;
+              saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
+
+              try {
+                const paymentRef = push(ref(db, `payments/${uid}`));
+                await set(paymentRef, {
+                  reference:        ref_no,
+                  amount:           amount,
+                  type:             'membership',
+                  year:             year,
+                  verified:         true,
+                  date:             new Date().toISOString(),
+                  email:            member.email || '',
+                  manualEntry:      true,
+                  recordedBy:       userEmail,
+                  note:             note || undefined
+                });
+                modal.hide();
+                alert(`Annual dues for ${year} marked as paid for ${name}.`);
+              } catch (err) {
+                alert('Failed to save payment: ' + (err.message || err));
+              } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Save Payment';
+              }
+            };
             return;
           }
           if (action === 'remind') {
@@ -1894,8 +1950,9 @@ window.addEventListener('DOMContentLoaded', () => {
           const name = `${member.firstName||''} ${member.lastName||''}`.trim() || uid;
           const email = member.email || '—';
           const chapter = member.chapter || '—';
+          const state = member.state || '—';
           Object.values(userPayments).forEach(p => {
-            allPayments.push({ ...p, uid, memberName: name, memberEmail: email, memberChapter: chapter });
+            allPayments.push({ ...p, uid, memberName: name, memberEmail: email, memberChapter: chapter, memberState: state });
           });
         });
 
@@ -1988,6 +2045,140 @@ window.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to load payments', err);
         tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Failed to load payments: ${err.message||err}</td></tr>`;
       }
+    };
+
+    // ── Finance dashboard ────────────────────────────────────
+    let financeLoaded = false;
+    let financeAllPayments = [];
+
+    window.loadFinanceDashboard = async function() {
+      const stateBody  = document.getElementById('financeStateBody');
+      const stateFoot  = document.getElementById('financeStateFoot');
+      const yearSel    = document.getElementById('financeYearFilter');
+      const monthSel   = document.getElementById('financeMonthFilter');
+      const exportBtn  = document.getElementById('exportFinanceBtn');
+      if (!stateBody) return;
+
+      if (!financeLoaded) {
+        stateBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>';
+        try {
+          const [membersSnap, paymentsSnap] = await Promise.all([
+            get(ref(db, 'members')),
+            get(ref(db, 'payments'))
+          ]);
+          const membersData   = membersSnap.val()  || {};
+          const paymentsData  = paymentsSnap.val() || {};
+
+          financeAllPayments = [];
+          Object.entries(paymentsData).forEach(([uid, userPayments]) => {
+            const m = membersData[uid] || {};
+            const state = (m.state || '').trim() || 'Unknown';
+            Object.values(userPayments).forEach(p => {
+              if (!p.verified) return; // only count verified payments
+              financeAllPayments.push({ ...p, memberState: state });
+            });
+          });
+
+          // Populate year filter from actual data
+          const years = [...new Set(financeAllPayments
+            .map(p => p.date ? new Date(p.date).getFullYear() : null)
+            .filter(Boolean)
+          )].sort((a,b) => b - a);
+          const existingYears = new Set([...yearSel.options].map(o => o.value));
+          years.forEach(y => {
+            if (!existingYears.has(String(y))) {
+              const opt = document.createElement('option');
+              opt.value = y; opt.textContent = y;
+              yearSel.appendChild(opt);
+            }
+          });
+
+          financeLoaded = true;
+        } catch (err) {
+          stateBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to load: ${err.message||err}</td></tr>`;
+          return;
+        }
+      }
+
+      function renderFinance() {
+        const yr  = yearSel?.value  || 'all';
+        const mo  = monthSel?.value || 'all';
+
+        let payments = financeAllPayments;
+        if (yr !== 'all') payments = payments.filter(p => p.date && new Date(p.date).getFullYear() === Number(yr));
+        if (mo !== 'all') payments = payments.filter(p => p.date && new Date(p.date).getMonth()    === Number(mo));
+
+        // Summary totals
+        const total    = payments.reduce((s,p) => s + (Number(p.amount)||0), 0);
+        const regTotal = payments.filter(p => p.type === 'registration' || p.type === 'registration_topup')
+                                 .reduce((s,p) => s + (Number(p.amount)||0), 0);
+        const annTotal = payments.filter(p => p.type === 'membership')
+                                 .reduce((s,p) => s + (Number(p.amount)||0), 0);
+
+        document.getElementById('finTotalCollected').textContent = '₦' + total.toLocaleString();
+        document.getElementById('finRegTotal').textContent       = '₦' + regTotal.toLocaleString();
+        document.getElementById('finAnnualTotal').textContent    = '₦' + annTotal.toLocaleString();
+
+        // Group by state
+        const byState = {};
+        payments.forEach(p => {
+          const s = p.memberState || 'Unknown';
+          if (!byState[s]) byState[s] = { reg: 0, annual: 0, members: new Set() };
+          if (p.type === 'registration' || p.type === 'registration_topup') byState[s].reg    += Number(p.amount)||0;
+          if (p.type === 'membership')                                       byState[s].annual += Number(p.amount)||0;
+          byState[s].members.add(p.uid || p.memberEmail || '');
+        });
+
+        const stateRows = Object.entries(byState)
+          .map(([state, d]) => ({ state, reg: d.reg, annual: d.annual, total: d.reg + d.annual, members: d.members.size }))
+          .sort((a, b) => b.total - a.total);
+
+        document.getElementById('finStateCount').textContent = stateRows.filter(r => r.state !== 'Unknown').length;
+
+        if (!stateRows.length) {
+          stateBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No data for selected period.</td></tr>';
+          stateFoot.innerHTML = '';
+          return;
+        }
+
+        stateBody.innerHTML = stateRows.map((r, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${r.state}</td>
+            <td class="text-center">${r.members}</td>
+            <td>₦${r.reg.toLocaleString()}</td>
+            <td>₦${r.annual.toLocaleString()}</td>
+            <td class="text-end fw-bold">₦${r.total.toLocaleString()}</td>
+          </tr>`).join('');
+
+        stateFoot.innerHTML = `
+          <tr class="table-success fw-bold">
+            <td colspan="2">TOTAL</td>
+            <td class="text-center">${[...new Set(payments.map(p => p.uid||p.memberEmail||''))].length}</td>
+            <td>₦${regTotal.toLocaleString()}</td>
+            <td>₦${annTotal.toLocaleString()}</td>
+            <td class="text-end">₦${total.toLocaleString()}</td>
+          </tr>`;
+
+        // Export
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const headers = ['State','Members Paid','Registration Fees','Annual Dues','Total'];
+            const rows = [headers, ...stateRows.map(r => [r.state, r.members, r.reg, r.annual, r.total])];
+            const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = `niee-finance${yr !== 'all' ? '-'+yr : ''}${mo !== 'all' ? '-m'+(Number(mo)+1) : ''}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          };
+        }
+      }
+
+      yearSel?.addEventListener('change', renderFinance);
+      monthSel?.addEventListener('change', renderFinance);
+      renderFinance();
     };
   }
 
