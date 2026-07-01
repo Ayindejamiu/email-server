@@ -1489,6 +1489,11 @@ window.addEventListener('DOMContentLoaded', () => {
           const newType = this.value;
           try {
             await update(ref(db, `members/${uid}`), { membershipType: newType, reviewedBy: userEmail, reviewedAt: new Date().toISOString() });
+            const memberSnap = await get(ref(db, `members/${uid}`));
+            const memberData = memberSnap.val() || {};
+            if (memberData.email) {
+              await sendStatusEmail(memberData.email, memberData.firstName, memberData.lastName, memberData.status, newType, memberData.nieeNumber);
+            }
           } catch (err) {
             alert('Failed to update membership type: ' + (err.message || err));
             const snap = await get(ref(db, `members/${uid}`));
@@ -2232,6 +2237,7 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('editFirstName').value = member.firstName || '';
       document.getElementById('editLastName').value = member.lastName || '';
       document.getElementById('editPhone').value = member.phone || '';
+      document.getElementById('editDob').value = member.dob || '';
       document.getElementById('editAddress').value = member.address || '';
       document.getElementById('editMembershipType').value = member.membershipType || '';
       document.getElementById('editState').value = member.state || '';
@@ -2302,6 +2308,7 @@ window.addEventListener('DOMContentLoaded', () => {
           firstName: document.getElementById('editFirstName').value || '',
           lastName: document.getElementById('editLastName').value || '',
           phone: document.getElementById('editPhone').value || '',
+          dob: document.getElementById('editDob').value || '',
           address: document.getElementById('editAddress').value || '',
           membershipType: document.getElementById('editMembershipType').value || '',
           state: document.getElementById('editState').value || '',
