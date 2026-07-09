@@ -7,7 +7,7 @@ const admin = require('firebase-admin');
 const {
   registeredEmail, approvedEmail, rejectedEmail,
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
-  fadahunsiRegistrationEmail
+  fadahunsiRegistrationEmail, agmRegistrationEmail
 } = require('./templates');
 
 // Initialize Firebase Admin SDK if service account is configured
@@ -154,6 +154,29 @@ app.post('/api/send-event-registration-email', async (req, res) => {
     res.json({ success: true, id: result.data?.id });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Failed to send event reg email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-agm-registration-email
+// Body: { email, name, registrationCode, category, hasSpouse, amount }
+app.post('/api/send-agm-registration-email', async (req, res) => {
+  const { email, name, registrationCode, category, hasSpouse, amount } = req.body;
+  if (!email || !name || !registrationCode) {
+    return res.status(400).json({ error: 'email, name and registrationCode are required' });
+  }
+  try {
+    const template = agmRegistrationEmail({ name, registrationCode, category, hasSpouse, amount });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] AGM reg email sent to ${email} — code: ${registrationCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send AGM reg email to ${email}:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });

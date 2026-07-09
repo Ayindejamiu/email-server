@@ -440,8 +440,76 @@ function fadahunsiRegistrationEmail({ name, registrationCode, sex, isNieeMember 
   };
 }
 
+// ── Event: 2026 National Conference/AGM registration confirmation ────────────
+function agmRegistrationEmail({ name, registrationCode, category, hasSpouse, amount }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎫</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your registration and payment for the <strong>2026 National Conference/AGM</strong> have been successfully received.
+      Please find your registration details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Registration Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${registrationCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Please present this code at the venue</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Theme</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Advancing Environmental Resilience through Engineering Innovation for Sustainable National Development</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">26th &amp; 27th November, 2026</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">NSE Auditorium, FCT Abuja</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Category</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${category}${hasSpouse ? ' + Spouse' : ''}</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Amount Paid</p>
+          <p style="color:#059669;font-size:18px;font-weight:800;margin:0;">₦${Number(amount || 0).toLocaleString()}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      We look forward to welcoming you. For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Registration Confirmed – ${registrationCode} | 2026 NIEE National Conference/AGM`,
+    html: wrapper(body)
+  };
+}
+
 module.exports = {
   registeredEmail, approvedEmail, rejectedEmail,
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
-  fadahunsiRegistrationEmail
+  fadahunsiRegistrationEmail, agmRegistrationEmail
 };
