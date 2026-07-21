@@ -8,7 +8,8 @@ const {
   registeredEmail, approvedEmail, rejectedEmail,
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
   fadahunsiRegistrationEmail, agmRegistrationEmail,
-  abstractSubmissionEmail, fullPaperSubmissionEmail
+  abstractSubmissionEmail, fullPaperSubmissionEmail,
+  fellowApplicationEmail
 } = require('./templates');
 
 // Initialize Firebase Admin SDK if service account is configured
@@ -203,6 +204,29 @@ app.post('/api/send-paper-submission-email', async (req, res) => {
     res.json({ success: true, id: result.data?.id });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Failed to send paper ${stage} email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-fellow-application-email
+// Body: { email, name, referenceCode }
+app.post('/api/send-fellow-application-email', async (req, res) => {
+  const { email, name, referenceCode } = req.body;
+  if (!email || !name || !referenceCode) {
+    return res.status(400).json({ error: 'email, name and referenceCode are required' });
+  }
+  try {
+    const template = fellowApplicationEmail({ name, referenceCode });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] Fellow application email sent to ${email} — ref: ${referenceCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send fellow application email to ${email}:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });

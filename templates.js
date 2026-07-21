@@ -624,9 +624,44 @@ function fullPaperSubmissionEmail({ name, submissionCode, paperTitle, subtheme }
   };
 }
 
+// ── Fellow application confirmation ───────────────────────────────────────────
+function fellowApplicationEmail({ name, referenceCode }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🏅</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Application Received!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Fellow of NIEE — Application</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Thank you for applying for elevation to Fellow of the Nigerian Institution of Environmental Engineers.
+      Your application has been received and will be reviewed by the NIEE Secretariat.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Application Reference</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${referenceCode}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      The Secretariat will contact you regarding the outcome of your application. For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Application Received – ${referenceCode} | NIEE Fellow Application`,
+    html: wrapper(body)
+  };
+}
+
 module.exports = {
   registeredEmail, approvedEmail, rejectedEmail,
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
+  fellowApplicationEmail,
   fadahunsiRegistrationEmail, agmRegistrationEmail,
   abstractSubmissionEmail, fullPaperSubmissionEmail
 };
