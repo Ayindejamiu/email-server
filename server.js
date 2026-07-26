@@ -6,7 +6,10 @@ const { Resend } = require('resend');
 const admin = require('firebase-admin');
 const {
   registeredEmail, approvedEmail, rejectedEmail,
-  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail
+  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
+  fadahunsiRegistrationEmail, agmRegistrationEmail,
+  abstractSubmissionEmail, fullPaperSubmissionEmail,
+  fellowApplicationEmail
 } = require('./templates');
 
 // Initialize Firebase Admin SDK if service account is configured
@@ -130,6 +133,100 @@ app.post('/api/update-auth-email', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Failed to update auth email for uid ${uid}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-event-registration-email
+// Body: { email, name, registrationCode, sex, isNieeMember }
+app.post('/api/send-event-registration-email', async (req, res) => {
+  const { email, name, registrationCode, sex, isNieeMember } = req.body;
+  if (!email || !name || !registrationCode) {
+    return res.status(400).json({ error: 'email, name and registrationCode are required' });
+  }
+  try {
+    const template = fadahunsiRegistrationEmail({ name, registrationCode, sex, isNieeMember });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] Event reg email sent to ${email} — code: ${registrationCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send event reg email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-agm-registration-email
+// Body: { email, name, registrationCode, nieeNumber, branch, category, hasSpouse, amount }
+app.post('/api/send-agm-registration-email', async (req, res) => {
+  const { email, name, registrationCode, nieeNumber, branch, category, hasSpouse, amount } = req.body;
+  if (!email || !name || !registrationCode) {
+    return res.status(400).json({ error: 'email, name and registrationCode are required' });
+  }
+  try {
+    const template = agmRegistrationEmail({ name, registrationCode, nieeNumber, branch, category, hasSpouse, amount });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] AGM reg email sent to ${email} — code: ${registrationCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send AGM reg email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-paper-submission-email
+// Body: { stage: 'abstract'|'fullpaper', email, name, submissionCode, paperTitle, subtheme }
+app.post('/api/send-paper-submission-email', async (req, res) => {
+  const { stage, email, name, submissionCode, paperTitle, subtheme } = req.body;
+  if (!email || !name || !submissionCode || !stage) {
+    return res.status(400).json({ error: 'stage, email, name and submissionCode are required' });
+  }
+  try {
+    const template = stage === 'fullpaper'
+      ? fullPaperSubmissionEmail({ name, submissionCode, paperTitle, subtheme })
+      : abstractSubmissionEmail({ name, submissionCode, paperTitle, subtheme });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] Paper ${stage} email sent to ${email} — code: ${submissionCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send paper ${stage} email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/send-fellow-application-email
+// Body: { email, name, referenceCode }
+app.post('/api/send-fellow-application-email', async (req, res) => {
+  const { email, name, referenceCode } = req.body;
+  if (!email || !name || !referenceCode) {
+    return res.status(400).json({ error: 'email, name and referenceCode are required' });
+  }
+  try {
+    const template = fellowApplicationEmail({ name, referenceCode });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] Fellow application email sent to ${email} — ref: ${referenceCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send fellow application email to ${email}:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });

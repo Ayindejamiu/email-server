@@ -358,7 +358,310 @@ function reminderRejectedEmail({ firstName, lastName, membershipType, rejectionR
   return { subject: 'Follow-Up: Your NIEE Membership Application | NIEE Portal', html: wrapper(body) };
 }
 
+// ── Event: Fadahunsi Memorial Lecture registration confirmation ───────────────
+function fadahunsiRegistrationEmail({ name, registrationCode, sex, isNieeMember }) {
+  const salutation = sex === 'Female' ? 'Ms.' : 'Mr.';
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎓</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">9th Fadahunsi Memorial Lecture — In Honour of Late Chief Pa Fadahunsi</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${salutation} ${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your registration for the <strong>9th Fadahunsi Memorial Lecture</strong> has been successfully received.
+      Please find your registration details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Registration Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${registrationCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Please present this code at the event venue</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Event</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">9th Fadahunsi Memorial Lecture</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Saturday, 22nd August 2026</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Engr. G. O Aiwerioba Engineering Centre<br>184 Ekenwan Road, Benin City</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Entry</p>
+          <p style="color:#059669;font-size:15px;font-weight:700;margin:0;">Free</p>
+        </td>
+      </tr>
+    </table>
+
+    ${isNieeMember === 'Yes' ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:4px;padding:16px 20px;margin:0 0 24px;">
+      <tr>
+        <td>
+          <p style="color:#1e40af;font-size:14px;font-weight:600;margin:0 0 4px;">NIEE Member</p>
+          <p style="color:#374151;font-size:14px;line-height:1.6;margin:0;">
+            As an NIEE member, kindly bring your membership card or quote your NIEE number at the venue.
+          </p>
+        </td>
+      </tr>
+    </table>` : ''}
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      We look forward to welcoming you. For enquiries, contact the NIEE Secretariat.
+    </p>
+
+    <div style="text-align:center;">
+      <a href="https://nieeportal.web.app/portal/event-fadahunsi.html"
+         style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:13px 32px;border-radius:6px;">
+        View Event Details
+      </a>
+    </div>
+  `;
+  return {
+    subject: `Registration Confirmed – ${registrationCode} | 9th Fadahunsi Memorial Lecture`,
+    html: wrapper(body)
+  };
+}
+
+// ── Event: 2026 National Conference/AGM registration confirmation ────────────
+function agmRegistrationEmail({ name, registrationCode, nieeNumber, branch, category, hasSpouse, amount }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎫</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your registration and payment for the <strong>2026 National Conference/AGM</strong> have been successfully received.
+      Please find your registration details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Registration Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${registrationCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Please present this code at the venue</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Theme</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Advancing Environmental Resilience through Engineering Innovation for Sustainable National Development</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">26th &amp; 27th November, 2026</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">NSE Auditorium, FCT Abuja</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Category</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${category}${hasSpouse ? ' + Spouse' : ''}</p>
+        </td>
+      </tr>
+      ${nieeNumber ? `
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">NIEE Number</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${nieeNumber}</p>
+        </td>
+      </tr>` : ''}
+      ${branch ? `
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Branch/Chapter</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${branch}</p>
+        </td>
+      </tr>` : ''}
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Amount Paid</p>
+          <p style="color:#059669;font-size:18px;font-weight:800;margin:0;">₦${Number(amount || 0).toLocaleString()}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      We look forward to welcoming you. For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Registration Confirmed – ${registrationCode} | 2026 NIEE National Conference/AGM`,
+    html: wrapper(body)
+  };
+}
+
+// ── Conference paper: abstract submission confirmation ───────────────────────
+function abstractSubmissionEmail({ name, submissionCode, paperTitle, subtheme }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📝</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Abstract Received!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM — Call for Papers</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your abstract has been successfully received and is now under review. Please find your submission
+      details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Submission Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${submissionCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Keep this code — you'll need it (with this email address) to submit your full paper</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Paper Title</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${paperTitle}</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Sub-Theme</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${subtheme}</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Next Step</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Abstract acceptance notification by 30 September 2026. Full paper window: 5–31 October 2026.</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Abstract Received – ${submissionCode} | 2026 NIEE National Conference/AGM`,
+    html: wrapper(body)
+  };
+}
+
+// ── Conference paper: full paper submission confirmation ─────────────────────
+function fullPaperSubmissionEmail({ name, submissionCode, paperTitle, subtheme }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📄</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Full Paper Received!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM — Call for Papers</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your full paper has been successfully received and is now under peer review.
+    </p>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Submission Code</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;font-family:monospace;">${submissionCode}</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Paper Title</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${paperTitle}</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Sub-Theme</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${subtheme}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      Accepted papers will be presented at the Conference and considered for the Conference Proceedings.
+      For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Full Paper Received – ${submissionCode} | 2026 NIEE National Conference/AGM`,
+    html: wrapper(body)
+  };
+}
+
+// ── Fellow application confirmation ───────────────────────────────────────────
+function fellowApplicationEmail({ name, referenceCode }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🏅</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Application Received!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">Fellow of NIEE — Application</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Thank you for applying for elevation to Fellow of the Nigerian Institution of Environmental Engineers.
+      Your application has been received and will be reviewed by the NIEE Secretariat.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Application Reference</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${referenceCode}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      The Secretariat will contact you regarding the outcome of your application. For enquiries, contact the NIEE Secretariat.
+    </p>
+  `;
+  return {
+    subject: `Application Received – ${referenceCode} | NIEE Fellow Application`,
+    html: wrapper(body)
+  };
+}
+
 module.exports = {
   registeredEmail, approvedEmail, rejectedEmail,
-  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail
+  reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
+  fellowApplicationEmail,
+  fadahunsiRegistrationEmail, agmRegistrationEmail,
+  abstractSubmissionEmail, fullPaperSubmissionEmail
 };
