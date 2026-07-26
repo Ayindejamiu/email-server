@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const { Resend } = require('resend');
@@ -12,20 +13,31 @@ const {
   fellowApplicationEmail
 } = require('./templates');
 
-// Initialize Firebase Admin SDK if service account is configured
+// Initialize Firebase Admin SDK if service account is configured.
+// Two ways to supply credentials:
+//  - FIREBASE_SERVICE_ACCOUNT_PATH: path to a JSON key file on disk (local dev)
+//  - FIREBASE_SERVICE_ACCOUNT_JSON: the JSON key contents as a single env var
+//    (use this on Render/hosts with no persistent filesystem for secret files)
 let adminInitialized = false;
 try {
+  const saJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  if (saPath && !admin.apps.length) {
-    const serviceAccount = require(path.resolve(saPath));
+  let serviceAccount = null;
+  if (saJson) {
+    serviceAccount = JSON.parse(saJson);
+  } else if (saPath) {
+    serviceAccount = require(path.resolve(saPath));
+  }
+
+  if (serviceAccount && !admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://nieeportal-default-rtdb.firebaseio.com'
     });
     adminInitialized = true;
     console.log('[Firebase Admin] Initialized successfully');
-  } else if (!saPath) {
-    console.warn('[Firebase Admin] FIREBASE_SERVICE_ACCOUNT_PATH not set — /api/update-auth-email will be unavailable');
+  } else if (!serviceAccount) {
+    console.warn('[Firebase Admin] Neither FIREBASE_SERVICE_ACCOUNT_JSON nor FIREBASE_SERVICE_ACCOUNT_PATH set — /api/update-auth-email and /api/paystack-webhook will be unavailable');
   }
 } catch (e) {
   console.error('[Firebase Admin] Init failed:', e.message);
@@ -34,8 +46,100 @@ try {
 const app = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const PORT = process.env.PORT || 3001;
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 app.use(cors());
+
+// POST /api/paystack-webhook
+// Registered before express.json() because signature verification needs the raw request body.
+// Configure this URL in the Paystack Dashboard → Settings → API Keys & Webhooks.
+app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res) => {
+  if (!PAYSTACK_SECRET_KEY) {
+    console.error('[Paystack Webhook] PAYSTACK_SECRET_KEY not set — rejecting webhook');
+    return res.sendStatus(500);
+  }
+
+  const signature = req.headers['x-paystack-signature'];
+  const expectedHash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(req.body).digest('hex');
+  if (!signature || signature !== expectedHash) {
+    console.warn('[Paystack Webhook] Invalid signature — rejecting');
+    return res.sendStatus(401);
+  }
+
+  // Ack immediately — Paystack retries on anything but a fast 2xx, and any
+  // failure below is now a reconciliation problem, not a delivery problem.
+  res.sendStatus(200);
+
+  let event;
+  try {
+    event = JSON.parse(req.body.toString('utf8'));
+  } catch (e) {
+    console.error('[Paystack Webhook] Failed to parse payload:', e.message);
+    return;
+  }
+
+  if (event.event !== 'charge.success') return;
+
+  if (!adminInitialized) {
+    console.error('[Paystack Webhook] Firebase Admin not configured — cannot record payment', event.data?.reference);
+    return;
+  }
+
+  const data = event.data || {};
+  const { reference, amount, metadata } = data;
+  const uid = metadata && metadata.uid;
+  const purpose = (metadata && metadata.purpose) || 'unknown';
+  const email = (data.customer && data.customer.email) || '';
+
+  if (!uid || !reference) {
+    console.warn('[Paystack Webhook] Missing uid or reference in charge.success payload — skipping', reference);
+    return;
+  }
+
+  try {
+    const db = admin.database();
+    const paymentsRef = db.ref(`payments/${uid}`);
+
+    // Idempotency: the client-side callback may have already recorded this
+    // exact reference, or Paystack may retry the webhook — don't double-record.
+    const existing = await paymentsRef.orderByChild('reference').equalTo(reference).once('value');
+    if (existing.exists()) {
+      console.log('[Paystack Webhook] Reference already recorded, skipping', reference);
+      return;
+    }
+
+    const paymentRecord = {
+      reference,
+      amount: (amount || 0) / 100,
+      type: purpose === 'annual_dues' ? 'membership' : 'registration',
+      verified: true,
+      date: data.paid_at || new Date().toISOString(),
+      email,
+      source: 'webhook'
+    };
+    if (purpose === 'annual_dues') {
+      paymentRecord.membershipType = metadata.membershipType || '';
+      paymentRecord.year = metadata.year || '';
+    }
+
+    await paymentsRef.push(paymentRecord);
+
+    if (purpose === 'initial_registration' || purpose === 'registration_fee') {
+      const memberRef = db.ref(`members/${uid}`);
+      const memberSnap = await memberRef.once('value');
+      if (memberSnap.exists()) {
+        await memberRef.update({ status: 'Registered', registrationPaidAt: new Date().toISOString() });
+      } else {
+        console.warn('[Paystack Webhook] Payment recorded but no member record exists for uid — status not updated', uid);
+      }
+    }
+
+    console.log(`[Paystack Webhook] Recorded ${purpose} payment ${reference} for uid ${uid}`);
+  } catch (err) {
+    console.error('[Paystack Webhook] Failed to record payment', reference, err.message);
+  }
+});
+
 app.use(express.json());
 
 // POST /api/send-status-email
@@ -231,7 +335,7 @@ app.post('/api/send-fellow-application-email', async (req, res) => {
   }
 });
 
-app.get('/health', (_req, res) => res.json({ status: 'ok', adminReady: adminInitialized }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', adminReady: adminInitialized, paystackWebhookReady: !!PAYSTACK_SECRET_KEY }));
 
 app.listen(PORT, () => {
   console.log(`NIEE email server running on port ${PORT}`);

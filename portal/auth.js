@@ -16,6 +16,7 @@ import {
   update,
   push,
   set,
+  remove,
   runTransaction
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
@@ -289,6 +290,47 @@ window.addEventListener('DOMContentLoaded', () => {
     "Corporate Member": 5000,
     "Corporate Organization Member": 20000
   };
+
+  // ── NIEE administrative/membership year ──────────────────────────────────
+  // The admin year runs July 1 – June 30. A payment made any time before
+  // July 1 of year Y falls in the (Y-1)/Y cycle; from July 1 of year Y it
+  // falls in the Y/(Y+1) cycle. `year` stored on a payment record is always
+  // the START year of its cycle (e.g. 2026 for the "2026/2027" cycle).
+  function membershipYearStart(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const y = d.getFullYear();
+    return d.getMonth() >= 6 ? y : y - 1; // getMonth() 6 === July
+  }
+  function membershipYearLabel(date) {
+    const start = membershipYearStart(date);
+    return `${start}/${start + 1}`;
+  }
+  // Display helper for a payment record's `year` field: membership dues show
+  // as a "2026/2027" cycle label; one-off registration fees show as-is.
+  function formatPaymentCycle(p) {
+    if (p.type === 'registration' || p.type === 'registration_topup') {
+      return p.year || 'One-time';
+    }
+    return p.year ? `${p.year}/${Number(p.year) + 1}` : '—';
+  }
+
+  // Free-text "state" fields collect inconsistent casing/suffixes over time
+  // (e.g. "KADUNA", "Kaduna", "Lagos state") plus several FCT spellings.
+  // Normalize for grouping so the revenue-by-state breakdown doesn't fragment.
+  const STATE_ALIASES = {
+    'fct': 'FCT (Abuja)',
+    'abuja': 'FCT (Abuja)',
+    'abuja capital territory': 'FCT (Abuja)',
+    'federal capital territory': 'FCT (Abuja)'
+  };
+  function normalizeStateName(raw) {
+    let s = (raw || '').trim();
+    if (!s) return 'Unknown';
+    s = s.replace(/\s+state$/i, '').trim();
+    const alias = STATE_ALIASES[s.toLowerCase()];
+    if (alias) return alias;
+    return s.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  }
 
   let currentUserUID = null;
   let userEmail = '';
@@ -614,14 +656,57 @@ window.addEventListener('DOMContentLoaded', () => {
         if (existing.nieeNumber) data.nieeNumber = existing.nieeNumber;
         if (existing.authUid)    data.authUid    = existing.authUid;
 
+        const emailForPayment = auth.currentUser?.email || email;
+
+        // Never charge the ₦1,000 registration fee twice: if a verified registration
+        // payment already exists for this uid (e.g. a bank transfer that succeeded but a
+        // previous session never made it back here to save the application), just save
+        // the completed form and skip Paystack entirely.
+        const priorPaymentsSnap = await get(ref(db, `payments/${currentUserUID}`));
+        const priorPayments = Object.values(priorPaymentsSnap.val() || {});
+        const alreadyPaidReg = priorPayments.find(p => p.type === 'registration' && p.verified);
+
+        if (alreadyPaidReg) {
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving your application…';
+          const finalData = { ...data, status: 'Registered', registrationPaidAt: new Date().toISOString() };
+          try {
+            await set(ref(db, `members/${currentUserUID}`), finalData);
+            if (finalData.nieeNumber) {
+              await update(ref(db, `members_registry/${finalData.nieeNumber}`), finalData);
+            }
+            await sendStatusEmail(emailForPayment, data.firstName, data.lastName, 'Registered', data.membershipType);
+            alert('Registration submitted! Your ₦1,000 registration fee was already verified (ref: ' + alreadyPaidReg.reference + '), so no further payment is required. Your application is now under review.');
+            window.location.href = 'dashboard.html';
+          } catch (err) {
+            console.error('Save error for pre-paid registration:', err);
+            alert('Failed to save your application: ' + (err.message || 'Unknown error'));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-credit-card me-1"></i>Submit &amp; Pay ₦1,000 Registration Fee';
+          }
+          return;
+        }
+
         if (typeof PaystackPop === 'undefined') {
           alert('Payment system not loaded. Please refresh the page and try again.');
           submitBtn.disabled = false;
           return;
         }
 
-        const emailForPayment = auth.currentUser?.email || email;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Opening payment…';
+
+        // Persist the filled-in application now, before payment, so it survives even if
+        // the Paystack callback never fires in this browser (e.g. a bank transfer completed
+        // from a different tab/device). Status flips to 'Registered' once payment is
+        // confirmed, either by the callback below or by the server-side webhook.
+        try {
+          await set(ref(db, `members/${currentUserUID}`), { ...data, status: 'Pending' });
+        } catch (err) {
+          console.error('Pre-payment save error:', err);
+          alert('Failed to save your application before payment: ' + (err.message || 'Unknown error'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="bi bi-credit-card me-1"></i>Submit &amp; Pay ₦1,000 Registration Fee';
+          return;
+        }
 
         const handler = PaystackPop.setup({
           key: 'pk_live_2c2ea20bf7c7cbdd69e4b63d26da7059998a8e8f',
@@ -629,7 +714,7 @@ window.addEventListener('DOMContentLoaded', () => {
           amount: 1000 * 100,
           currency: 'NGN',
           split_code: 'SPL_NNfUa4gYXW',
-          metadata: { uid: currentUserUID },
+          metadata: { uid: currentUserUID, purpose: 'initial_registration' },
           callback: function(response) {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving your application…';
             const finalData = { ...data, status: 'Registered', registrationPaidAt: new Date().toISOString() };
@@ -713,7 +798,7 @@ window.addEventListener('DOMContentLoaded', () => {
       amount: amount * 100,
       currency: 'NGN',
       split_code: 'SPL_NNfUa4gYXW',
-      metadata: { uid },
+      metadata: { uid, purpose: 'registration_fee' },
       callback: function(response) {
         const paymentRef = push(ref(db, `payments/${uid}`));
         set(paymentRef, {
@@ -760,7 +845,7 @@ window.addEventListener('DOMContentLoaded', () => {
       amount: amount * 100,
       currency: 'NGN',
       split_code: 'SPL_NNfUa4gYXW',
-      metadata: { uid, membershipType, year },
+      metadata: { uid, membershipType, year, purpose: 'annual_dues' },
       callback: function(response) {
         const paymentRef = push(ref(db, `payments/${uid}`));
         set(paymentRef, {
@@ -795,7 +880,8 @@ window.addEventListener('DOMContentLoaded', () => {
   //             they are already registered so no first-year ₦15,000 premium applies (always ₦5,000)
   window.showMembershipFee = function(uid, membershipType, priorPayments, isImported) {
     if (!paymentYears) return;
-    const currentYear = new Date().getFullYear();
+    const cycleStart = membershipYearStart(new Date());
+    const cycleLabel = membershipYearLabel(new Date());
     const isCorp = (membershipType || '').toLowerCase().includes('corporate');
     // First-year ₦15,000 premium only applies to NEW portal-registered corporate members
     const hasPriorCorpAnnual = isCorp && (priorPayments || []).some(
@@ -806,7 +892,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const amount = isFirstCorpYear ? 15000 : baseAmount;
     const feeNote = isFirstCorpYear
       ? 'First-year corporate annual dues'
-      : `Annual dues for ${currentYear}`;
+      : `Annual dues for ${cycleLabel}`;
     paymentYears.innerHTML = '';
     const col = document.createElement('div');
     col.className = 'col-md-6';
@@ -820,7 +906,7 @@ window.addEventListener('DOMContentLoaded', () => {
         </button>
       </div>`;
     paymentYears.appendChild(col);
-    document.getElementById('payMembershipNowBtn')?.addEventListener('click', () => payNow(uid, amount, currentYear, membershipType));
+    document.getElementById('payMembershipNowBtn')?.addEventListener('click', () => payNow(uid, amount, cycleStart, membershipType));
   };
 
   // ── Status Steps driver ────────────────────────────────────
@@ -1316,10 +1402,12 @@ window.addEventListener('DOMContentLoaded', () => {
       get(ref(db, `payments/${currentUserUID}`)).then(s => {
         const payments = s.val() || {};
         const values = Object.values(payments);
-        const currentYear = new Date().getFullYear();
+        const cycleStart = membershipYearStart(new Date());
+        const cycleLabel = membershipYearLabel(new Date());
+        const nextCycleStart = cycleStart + 1;
         const regPaidVerified = values.some(p => p.type === 'registration' && p.verified);
         const regPaymentExists = values.some(p => p.type === 'registration');
-        const membershipPaidThisYear = values.some(p => p.type === 'membership' && Number(p.year) === currentYear);
+        const membershipPaidThisYear = values.some(p => p.type === 'membership' && Number(p.year) === cycleStart);
 
         const paymentSection = document.getElementById('paymentYears');
         const headerPayBtn = document.getElementById('payMembershipBtn');
@@ -1391,21 +1479,21 @@ window.addEventListener('DOMContentLoaded', () => {
         // Approved member: show upcoming/paid notice for this year
         const annualBadge = document.getElementById('annualFeeStatusBadge');
         if (membershipPaidThisYear) {
-          if (paymentSection) paymentSection.innerHTML = `<div class="col-12"><div class="alert alert-success mb-0"><i class="bi bi-check-circle me-2"></i>Annual membership dues for <strong>${currentYear}</strong> are paid. Next payment due: <strong>January ${currentYear + 1}</strong>.</div></div>`;
-          if (annualBadge) { annualBadge.style.display = ''; annualBadge.className = 'status-badge status-approved'; annualBadge.textContent = currentYear + ' Paid'; }
-          if (headerPayBtn) { headerPayBtn.disabled = true; headerPayBtn.textContent = `Paid for ${currentYear}`; }
+          if (paymentSection) paymentSection.innerHTML = `<div class="col-12"><div class="alert alert-success mb-0"><i class="bi bi-check-circle me-2"></i>Annual membership dues for <strong>${cycleLabel}</strong> are paid. Next payment due: <strong>July ${nextCycleStart}</strong>.</div></div>`;
+          if (annualBadge) { annualBadge.style.display = ''; annualBadge.className = 'status-badge status-approved'; annualBadge.textContent = cycleLabel + ' Paid'; }
+          if (headerPayBtn) { headerPayBtn.disabled = true; headerPayBtn.textContent = `Paid for ${cycleLabel}`; }
           // Show upcoming payment card
           const upcomingCard = document.getElementById('upcomingPaymentCard');
           const upcomingBody = document.getElementById('upcomingPaymentBody');
           const fee = membershipFees[data.membershipType] || 0;
           if (upcomingCard) upcomingCard.classList.remove('d-none');
-          if (upcomingBody) upcomingBody.innerHTML = `<i class="bi bi-calendar-event me-2 text-niee"></i>Your next annual due of <strong>₦${fee.toLocaleString()}</strong> (${data.membershipType}) will be due in <strong>January ${currentYear + 1}</strong>.`;
+          if (upcomingBody) upcomingBody.innerHTML = `<i class="bi bi-calendar-event me-2 text-niee"></i>Your next annual due of <strong>₦${fee.toLocaleString()}</strong> (${data.membershipType}) will be due in <strong>July ${nextCycleStart}</strong>.`;
           return;
         }
 
-        // Approved, not yet paid this year: show pay card
+        // Approved, not yet paid this cycle: show pay card
         showMembershipFee(currentUserUID, data.membershipType || 'Corporate Member', values, isLegacyMember);
-        if (annualBadge) { annualBadge.style.display = ''; annualBadge.className = 'status-badge status-pending'; annualBadge.textContent = currentYear + ' Due'; }
+        if (annualBadge) { annualBadge.style.display = ''; annualBadge.className = 'status-badge status-pending'; annualBadge.textContent = cycleLabel + ' Due'; }
         if (headerPayBtn) {
           headerPayBtn.disabled = false;
           headerPayBtn.textContent = 'Pay Annual Dues';
@@ -1580,7 +1668,7 @@ window.addEventListener('DOMContentLoaded', () => {
                   return `<tr>
                     <td>${typeBadge}</td>
                     <td>₦${Number(p.amount||0).toLocaleString()}</td>
-                    <td>${p.year || ((p.type==='registration'||p.type==='registration_topup') ? 'One-time' : '—')}</td>
+                    <td>${formatPaymentCycle(p)}</td>
                     <td><small class="font-monospace">${p.reference||'—'}</small></td>
                     <td>${p.date ? new Date(p.date).toLocaleDateString('en-GB') : '—'}</td>
                     <td>${badge}</td>
@@ -1602,8 +1690,8 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           if (action === 'mark-annual-paid') {
             const name = `${member.firstName||''} ${member.lastName||''}`.trim() || uid;
-            const currentYear = new Date().getFullYear();
-            const years = Array.from({length: 5}, (_, i) => currentYear - i);
+            const currentCycleStart = membershipYearStart(new Date());
+            const cycleStarts = Array.from({length: 5}, (_, i) => currentCycleStart - i);
             const feeAmount = membershipFees[member.membershipType] || 0;
 
             document.getElementById('manualPayMemberName').textContent  = name;
@@ -1612,7 +1700,7 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('manualPayReference').value         = '';
             document.getElementById('manualPayNote').value              = '';
             const yearSel = document.getElementById('manualPayYear');
-            yearSel.innerHTML = years.map(y => `<option value="${y}"${y===currentYear?' selected':''}>${y}</option>`).join('');
+            yearSel.innerHTML = cycleStarts.map(y => `<option value="${y}"${y===currentCycleStart?' selected':''}>${y}/${y+1}</option>`).join('');
 
             const modal = new bootstrap.Modal(document.getElementById('manualAnnualPayModal'));
             modal.show();
@@ -1644,7 +1732,7 @@ window.addEventListener('DOMContentLoaded', () => {
                   note:             note || undefined
                 });
                 modal.hide();
-                alert(`Annual dues for ${year} marked as paid for ${name}.`);
+                alert(`Annual dues for ${year}/${year + 1} marked as paid for ${name}.`);
               } catch (err) {
                 alert('Failed to save payment: ' + (err.message || err));
               } finally {
@@ -1992,7 +2080,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const statusBadge = p.verified
               ? '<span class="badge bg-success">Verified</span>'
               : '<span class="badge bg-warning text-dark">Pending</span>';
-            const yearCol = (p.type === 'registration' || p.type === 'registration_topup') ? 'One-time' : (p.year || '—');
+            const yearCol = formatPaymentCycle(p);
             return `<tr>
               <td>${p.memberName}</td>
               <td>${p.memberEmail}</td>
@@ -2031,7 +2119,7 @@ window.addEventListener('DOMContentLoaded', () => {
           const rows = [headers, ...filtered.map(p => [
             p.memberName, p.memberEmail, p.memberChapter || '', p.type||'',
             p.amount||0,
-            p.type==='registration' ? 'One-time' : (p.year||''),
+            formatPaymentCycle(p),
             p.reference||'',
             p.date ? new Date(p.date).toLocaleDateString('en-GB') : '',
             p.verified ? 'Yes' : 'No'
@@ -2077,10 +2165,10 @@ window.addEventListener('DOMContentLoaded', () => {
           financeAllPayments = [];
           Object.entries(paymentsData).forEach(([uid, userPayments]) => {
             const m = membersData[uid] || {};
-            const state = (m.state || '').trim() || 'Unknown';
+            const state = normalizeStateName(m.state);
             Object.values(userPayments).forEach(p => {
               if (!p.verified) return; // only count verified payments
-              financeAllPayments.push({ ...p, memberState: state });
+              financeAllPayments.push({ ...p, uid, memberState: state });
             });
           });
 
@@ -2131,7 +2219,7 @@ window.addEventListener('DOMContentLoaded', () => {
           if (!byState[s]) byState[s] = { reg: 0, annual: 0, members: new Set() };
           if (p.type === 'registration' || p.type === 'registration_topup') byState[s].reg    += Number(p.amount)||0;
           if (p.type === 'membership')                                       byState[s].annual += Number(p.amount)||0;
-          byState[s].members.add(p.uid || p.memberEmail || '');
+          byState[s].members.add(p.uid || p.email || '');
         });
 
         const stateRows = Object.entries(byState)
@@ -2159,7 +2247,7 @@ window.addEventListener('DOMContentLoaded', () => {
         stateFoot.innerHTML = `
           <tr class="table-success fw-bold">
             <td colspan="2">TOTAL</td>
-            <td class="text-center">${[...new Set(payments.map(p => p.uid||p.memberEmail||''))].length}</td>
+            <td class="text-center">${[...new Set(payments.map(p => p.uid||p.email||''))].length}</td>
             <td>₦${regTotal.toLocaleString()}</td>
             <td>₦${annTotal.toLocaleString()}</td>
             <td class="text-end">₦${total.toLocaleString()}</td>
@@ -2184,6 +2272,323 @@ window.addEventListener('DOMContentLoaded', () => {
       yearSel?.addEventListener('change', renderFinance);
       monthSel?.addEventListener('change', renderFinance);
       renderFinance();
+    };
+
+    // ── AGM 2026 dashboard ───────────────────────────────────
+    let agmLoaded = false;
+    let agmAllRegs = [];
+
+    window.loadAgmDashboard = async function() {
+      const catBody   = document.getElementById('agmCategoryBody');
+      const regBody   = document.getElementById('agmRegBody');
+      const catFilter = document.getElementById('agmCategoryFilter');
+      const exportBtn = document.getElementById('exportAgmBtn');
+      if (!regBody) return;
+
+      if (!agmLoaded) {
+        regBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Loading…</td></tr>';
+        try {
+          const snap = await get(ref(db, 'events/agm-2026'));
+          const data = snap.val() || {};
+          agmAllRegs = Object.values(data);
+          agmLoaded = true;
+        } catch (err) {
+          regBody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Failed to load: ${err.message||err}</td></tr>`;
+          return;
+        }
+      }
+
+      function render() {
+        const catVal = catFilter?.value || 'all';
+        const regs = catVal === 'all' ? agmAllRegs : agmAllRegs.filter(r => r.category === catVal);
+
+        const total        = regs.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+        const spouseCount   = regs.filter(r => r.hasSpouse).length;
+        const virtualCount  = regs.filter(r => r.category === 'Virtual Attendee').length;
+
+        document.getElementById('agmTotalCollected').textContent = '₦' + total.toLocaleString();
+        document.getElementById('agmTotalRegs').textContent      = regs.length;
+        document.getElementById('agmSpouseCount').textContent    = spouseCount;
+        document.getElementById('agmVirtualCount').textContent   = virtualCount;
+
+        // Category breakdown
+        const byCat = {};
+        regs.forEach(r => {
+          const c = r.category || 'Unknown';
+          if (!byCat[c]) byCat[c] = { count: 0, total: 0 };
+          byCat[c].count += 1;
+          byCat[c].total += Number(r.amount) || 0;
+        });
+        const catRows = Object.entries(byCat)
+          .map(([category, d]) => ({ category, ...d }))
+          .sort((a, b) => b.total - a.total);
+
+        catBody.innerHTML = catRows.length
+          ? catRows.map(r => `
+            <tr>
+              <td>${r.category}</td>
+              <td>${r.count}</td>
+              <td class="text-end">₦${r.total.toLocaleString()}</td>
+            </tr>`).join('')
+          : '<tr><td colspan="3" class="text-center text-muted">No data for selected category.</td></tr>';
+
+        // Registrations table, newest first
+        const sorted = [...regs].sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
+        regBody.innerHTML = sorted.length
+          ? sorted.map(r => `
+            <tr>
+              <td style="font-family:monospace;font-size:.82rem;">${r.registrationCode || '—'}</td>
+              <td>${r.name || '—'}</td>
+              <td style="font-size:.82rem;">${r.email || '—'}</td>
+              <td style="font-size:.82rem;">${r.phone || '—'}</td>
+              <td style="font-family:monospace;font-size:.82rem;">${r.nieeNumber || '—'}</td>
+              <td style="font-size:.82rem;">${r.branch || '—'}</td>
+              <td>${r.category || '—'}</td>
+              <td>${r.hasSpouse ? '<span class="badge bg-info text-dark">Yes</span>' : '—'}</td>
+              <td class="text-end">₦${(Number(r.amount) || 0).toLocaleString()}</td>
+              <td style="font-size:.82rem;">${r.registeredAt ? new Date(r.registeredAt).toLocaleDateString('en-GB') : '—'}</td>
+            </tr>`).join('')
+          : '<tr><td colspan="10" class="text-center text-muted">No registrations found.</td></tr>';
+
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const headers = ['Code','Name','Email','Phone','NIEE No','Branch','Category','Spouse','Amount','Registered At'];
+            const rows = [headers, ...sorted.map(r => [
+              r.registrationCode || '', r.name || '', r.email || '', r.phone || '', r.nieeNumber || '', r.branch || '',
+              r.category || '', r.hasSpouse ? 'Yes' : 'No', r.amount || 0, r.registeredAt || ''
+            ])];
+            const csv = rows.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = `agm-2026-registrations${catVal !== 'all' ? '-' + catVal.replace(/\s+/g,'_') : ''}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          };
+        }
+      }
+
+      catFilter?.addEventListener('change', render);
+      render();
+    };
+
+    // ── Conference Papers dashboard ───────────────────────────
+    let papersLoaded = false;
+    let papersAll = [];
+
+    window.loadPapersDashboard = async function() {
+      const body       = document.getElementById('papersBody');
+      const statusFilter = document.getElementById('papersStatusFilter');
+      const exportBtn  = document.getElementById('exportPapersBtn');
+      if (!body) return;
+
+      if (!papersLoaded) {
+        body.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading…</td></tr>';
+        try {
+          const snap = await get(ref(db, 'events/agm-2026-papers'));
+          const data = snap.val() || {};
+          papersAll = Object.entries(data).map(([code, r]) => ({ code, ...r }));
+          papersLoaded = true;
+        } catch (err) {
+          body.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Failed to load: ${err.message||err}</td></tr>`;
+          return;
+        }
+      }
+
+      function viewText(title, text) {
+        document.getElementById('paperViewLabel').textContent = title;
+        document.getElementById('paperViewContent').textContent = text || '(none)';
+        new bootstrap.Modal(document.getElementById('paperViewModal')).show();
+      }
+
+      async function setStatus(code, status) {
+        try {
+          await update(ref(db, `events/agm-2026-papers/${code}`), { status });
+          const rec = papersAll.find(r => r.code === code);
+          if (rec) rec.status = status;
+        } catch (err) {
+          alert('Failed to update status: ' + (err.message || err));
+        }
+      }
+
+      // Event delegation avoids embedding free-text abstract/paper content
+      // (which may contain quotes/apostrophes) into inline HTML attributes.
+      if (!body.dataset.wired) {
+        body.dataset.wired = '1';
+        body.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-view]');
+          if (!btn) return;
+          const rec = papersAll.find(r => r.code === btn.dataset.code);
+          if (!rec) return;
+          const field = btn.dataset.view;
+          const label = (field === 'abstract' ? 'Abstract — ' : 'Full Paper — ') + (rec.paperTitle || '');
+          viewText(label, field === 'abstract' ? rec.abstract : rec.fullPaper);
+        });
+        body.addEventListener('change', (e) => {
+          const sel = e.target.closest('[data-status-for]');
+          if (!sel) return;
+          setStatus(sel.dataset.statusFor, sel.value);
+        });
+      }
+
+      function render() {
+        const statusVal = statusFilter?.value || 'all';
+        const rows = statusVal === 'all' ? papersAll : papersAll.filter(r => r.status === statusVal);
+
+        document.getElementById('papersTotalCount').textContent      = papersAll.length;
+        document.getElementById('papersAcceptedCount').textContent   = papersAll.filter(r => r.status === 'Accepted').length;
+        document.getElementById('papersFullPaperCount').textContent  = papersAll.filter(r => !!r.fullPaper).length;
+        document.getElementById('papersPendingCount').textContent    = papersAll.filter(r => r.status === 'Abstract Submitted' || r.status === 'Under Review').length;
+
+        const sorted = [...rows].sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+
+        body.innerHTML = sorted.length
+          ? sorted.map(r => `
+            <tr>
+              <td style="font-family:monospace;font-size:.82rem;">${r.code}</td>
+              <td style="max-width:220px;">${r.paperTitle || '—'}</td>
+              <td style="font-size:.85rem;">${r.name || '—'}<br><span class="text-muted" style="font-size:.78rem;">${r.email || ''}</span></td>
+              <td style="font-size:.82rem;">${r.subtheme || '—'}</td>
+              <td>
+                <select class="form-select form-select-sm" style="font-size:.78rem;" data-status-for="${r.code}">
+                  ${['Abstract Submitted','Under Review','Accepted','Rejected','Full Paper Submitted'].map(s =>
+                    `<option value="${s}" ${s === (r.status||'Abstract Submitted') ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </td>
+              <td><button type="button" class="btn btn-sm btn-outline-secondary" data-view="abstract" data-code="${r.code}">View</button></td>
+              <td>${r.fullPaper
+                  ? `<button type="button" class="btn btn-sm btn-outline-success" data-view="fullPaper" data-code="${r.code}">View</button>`
+                  : '<span class="text-muted" style="font-size:.8rem;">Not submitted</span>'}</td>
+              <td style="font-size:.8rem;">${r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-GB') : '—'}</td>
+            </tr>`).join('')
+          : '<tr><td colspan="8" class="text-center text-muted">No submissions found.</td></tr>';
+
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const headers = ['Code','Title','Author','Email','Sub-theme','Status','Has Full Paper','Submitted At'];
+            const csvRows = [headers, ...sorted.map(r => [
+              r.code, r.paperTitle || '', r.name || '', r.email || '', r.subtheme || '',
+              r.status || '', r.fullPaper ? 'Yes' : 'No', r.submittedAt || ''
+            ])];
+            const csv = csvRows.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = `agm-2026-papers${statusVal !== 'all' ? '-' + statusVal.replace(/\s+/g,'_') : ''}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          };
+        }
+      }
+
+      statusFilter?.addEventListener('change', render);
+      render();
+    };
+
+    // ── Fellow Applications dashboard ─────────────────────────
+    let fellowLoaded = false;
+    let fellowAll = [];
+
+    window.loadFellowDashboard = async function() {
+      const body         = document.getElementById('fellowBody');
+      const statusFilter = document.getElementById('fellowStatusFilter');
+      const exportBtn    = document.getElementById('exportFellowBtn');
+      if (!body) return;
+
+      if (!fellowLoaded) {
+        body.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Loading…</td></tr>';
+        try {
+          const snap = await get(ref(db, 'fellow_applications'));
+          const data = snap.val() || {};
+          fellowAll = Object.entries(data).map(([id, r]) => ({ id, ...r }));
+          fellowLoaded = true;
+        } catch (err) {
+          body.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Failed to load: ${err.message||err}</td></tr>`;
+          return;
+        }
+      }
+
+      function viewText(title, text) {
+        document.getElementById('paperViewLabel').textContent = title;
+        document.getElementById('paperViewContent').textContent = text || '(none)';
+        new bootstrap.Modal(document.getElementById('paperViewModal')).show();
+      }
+
+      async function setStatus(id, status) {
+        try {
+          await update(ref(db, `fellow_applications/${id}`), { status });
+          const rec = fellowAll.find(r => r.id === id);
+          if (rec) rec.status = status;
+        } catch (err) {
+          alert('Failed to update status: ' + (err.message || err));
+        }
+      }
+
+      if (!body.dataset.wired) {
+        body.dataset.wired = '1';
+        body.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-view]');
+          if (!btn) return;
+          const rec = fellowAll.find(r => r.id === btn.dataset.id);
+          if (!rec) return;
+          const field = btn.dataset.view;
+          const label = (field === 'education' ? 'Education — ' : 'Experience — ') + (rec.name || '');
+          viewText(label, field === 'education' ? rec.education : rec.experience);
+        });
+        body.addEventListener('change', (e) => {
+          const sel = e.target.closest('[data-status-for]');
+          if (!sel) return;
+          setStatus(sel.dataset.statusFor, sel.value);
+        });
+      }
+
+      function render() {
+        const statusVal = statusFilter?.value || 'all';
+        const rows = statusVal === 'all' ? fellowAll : fellowAll.filter(r => r.status === statusVal);
+        const sorted = [...rows].sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+
+        body.innerHTML = sorted.length
+          ? sorted.map(r => `
+            <tr>
+              <td style="font-family:monospace;font-size:.82rem;">${r.referenceCode || '—'}</td>
+              <td>${r.name || '—'}</td>
+              <td style="font-size:.82rem;">${r.email || '—'}</td>
+              <td style="font-size:.82rem;">${r.phone || '—'}</td>
+              <td style="font-family:monospace;font-size:.82rem;">${r.isNieeMember === 'Yes' ? (r.nieeNumber || '—') : '—'}</td>
+              <td style="font-family:monospace;font-size:.82rem;">${r.isNseMember === 'Yes' ? (r.nseNumber || '—') : '—'}</td>
+              <td><button type="button" class="btn btn-sm btn-outline-secondary" data-view="education" data-id="${r.id}">View</button></td>
+              <td><button type="button" class="btn btn-sm btn-outline-secondary" data-view="experience" data-id="${r.id}">View</button></td>
+              <td>
+                <select class="form-select form-select-sm" style="font-size:.78rem;" data-status-for="${r.id}">
+                  ${['Submitted','Under Review','Approved','Rejected'].map(s =>
+                    `<option value="${s}" ${s === (r.status||'Submitted') ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </td>
+              <td style="font-size:.8rem;">${r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-GB') : '—'}</td>
+            </tr>`).join('')
+          : '<tr><td colspan="10" class="text-center text-muted">No applications found.</td></tr>';
+
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const headers = ['Ref','Name','Email','Phone','NIEE Member','NIEE No','NSE Member','NSE No','Status','Submitted At'];
+            const csvRows = [headers, ...sorted.map(r => [
+              r.referenceCode || '', r.name || '', r.email || '', r.phone || '',
+              r.isNieeMember || '', r.nieeNumber || '', r.isNseMember || '', r.nseNumber || '',
+              r.status || '', r.submittedAt || ''
+            ])];
+            const csv = csvRows.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = `fellow-applications${statusVal !== 'all' ? '-' + statusVal.replace(/\s+/g,'_') : ''}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          };
+        }
+      }
+
+      statusFilter?.addEventListener('change', render);
+      render();
     };
   }
 
@@ -2399,10 +2804,10 @@ window.addEventListener('DOMContentLoaded', () => {
       const all      = snap.val() || {};
       const imported = Object.entries(all).filter(([,m]) => m.manualImport === true);
       if (!imported.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">None yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-center">None yet</td></tr>';
         return;
       }
-      tbody.innerHTML = imported.map(([,m]) => `
+      tbody.innerHTML = imported.map(([key,m]) => `
         <tr>
           <td>${[m.firstName, m.middleName, m.lastName].filter(Boolean).join(' ')}</td>
           <td style="font-size:.82rem;">${m.email||'—'}</td>
@@ -2410,7 +2815,44 @@ window.addEventListener('DOMContentLoaded', () => {
           <td style="font-family:monospace;font-size:.82rem;">${m.nieeNumber||'—'}</td>
           <td>${m.chapter||'—'}</td>
           <td style="font-size:.82rem;">${m.reviewedAt ? new Date(m.reviewedAt).toLocaleDateString() : '—'}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-danger deleteManualBtn" data-key="${key}" data-niee="${m.nieeNumber||''}" data-name="${[m.firstName, m.middleName, m.lastName].filter(Boolean).join(' ').replace(/"/g,'&quot;')}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
         </tr>`).join('');
+
+      tbody.querySelectorAll('.deleteManualBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const memberKey  = btn.getAttribute('data-key');
+          const nieeNumber = btn.getAttribute('data-niee');
+          const name       = btn.getAttribute('data-name') || 'this member';
+          if (!memberKey.startsWith('manual_')) {
+            alert('Only manually imported members can be deleted from this list.');
+            return;
+          }
+          if (!confirm(`Delete ${name} (${nieeNumber || 'no NIEE number'})?\n\nThis removes the member record and their payment history, and returns ${nieeNumber || 'the NIEE number'} to the available pool for reuse.`)) {
+            return;
+          }
+          btn.disabled = true;
+          try {
+            await remove(ref(db, `members/${memberKey}`));
+            if (nieeNumber) {
+              await remove(ref(db, `members_registry/${nieeNumber}`));
+              await update(ref(db, `reserved_niee/${nieeNumber}`), {
+                status: 'available', reservedAt: new Date().toISOString(),
+                usedFor: null, usedAt: null
+              });
+            }
+            await remove(ref(db, `payments/${memberKey}`));
+            await renderReserved();
+            await renderImported();
+          } catch (err) {
+            alert('Failed to delete: ' + (err.message || err));
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
     // Wire the button before any async work so it's always clickable
@@ -2496,11 +2938,12 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         if (markAnnualPaid) {
           const aKey = push(pRef).key;
+          const annualCycleStart = membershipYearStart(approvedAt);
           await set(ref(db, `payments/${memberKey}/${aKey}`), {
             type: 'membership', amount: membershipFees[membershipType] || 0,
-            year: 2026, membershipType, verified: true,
+            year: annualCycleStart, membershipType, verified: true,
             date: approvedAt, email,
-            reference: 'MANUAL-ANN-' + nieeNumber + '-2026'
+            reference: 'MANUAL-ANN-' + nieeNumber + '-' + annualCycleStart
           });
         }
 
