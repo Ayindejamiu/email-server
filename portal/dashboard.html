@@ -539,17 +539,6 @@
     `;
     document.head.appendChild(style);
 
-    // Update edit modal title based on section
-    function openEditModal(section) {
-      const titles = {
-        personal: 'Edit Personal Information',
-        education: 'Edit Education History',
-        experience: 'Edit Work Experience',
-        reference: 'Edit Reference'
-      };
-      const titleEl = document.getElementById('editModalTitle');
-      if (titleEl) titleEl.textContent = titles[section] || 'Edit Profile';
-    }
   </script>
   <script type="module" src="auth.js"></script>
 </body>

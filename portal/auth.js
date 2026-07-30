@@ -1817,12 +1817,15 @@ window.addEventListener('DOMContentLoaded', () => {
         <h5>Personal Information</h5>
         <div class="row mb-2">
           <div class="col-md-6"><strong>Name:</strong> ${name}</div>
-          <div class="col-md-6"><strong>Email:</strong> ${member.email||'-'}</div>
+          <div class="col-md-6"><strong>NIEE Number:</strong> ${member.nieeNumber || 'Not yet assigned'}</div>
         </div>
         <div class="row mb-2">
-          <div class="col-md-4"><strong>Phone:</strong> ${member.phone||'-'}</div>
-          <div class="col-md-4"><strong>DOB:</strong> ${member.dob||'-'}</div>
-          <div class="col-md-4"><strong>Gender:</strong> ${member.gender||'-'}</div>
+          <div class="col-md-6"><strong>Email:</strong> ${member.email||'-'}</div>
+          <div class="col-md-6"><strong>Phone:</strong> ${member.phone||'-'}</div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-md-6"><strong>DOB:</strong> ${member.dob||'-'}</div>
+          <div class="col-md-6"><strong>Gender:</strong> ${member.gender||'-'}</div>
         </div>
         <div class="row mb-3">
           <div class="col-12"><strong>Address:</strong> ${member.address||'-'}</div>
@@ -2626,6 +2629,15 @@ window.addEventListener('DOMContentLoaded', () => {
       alert('Please sign in first');
       return;
     }
+    const titles = {
+      personal: 'Edit Personal Information',
+      education: 'Edit Education History',
+      experience: 'Edit Work Experience',
+      reference: 'Edit Reference'
+    };
+    const titleEl = document.getElementById('editModalTitle');
+    if (titleEl) titleEl.textContent = titles[section] || 'Edit Profile';
+
     const snap = await get(ref(db, `members/${currentUserUID}`));
     const member = snap.val() || {};
     const modalEl = document.getElementById('editProfileModal');
