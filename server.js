@@ -10,7 +10,7 @@ const {
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
   fadahunsiRegistrationEmail, agmRegistrationEmail,
   abstractSubmissionEmail, fullPaperSubmissionEmail,
-  fellowApplicationEmail
+  fellowApplicationEmail, cpdRegistrationEmail
 } = require('./templates');
 
 // Initialize Firebase Admin SDK if service account is configured.
@@ -334,6 +334,30 @@ app.post('/api/send-fellow-application-email', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// POST /api/send-cpd-registration-email
+// Body: { email, name, registrationCode, category, branch, institution, nieeNumber, amount }
+app.post('/api/send-cpd-registration-email', async (req, res) => {
+  const { email, name, registrationCode, category, branch, institution, nieeNumber, amount } = req.body;
+  if (!email || !name || !registrationCode) {
+    return res.status(400).json({ error: 'email, name and registrationCode are required' });
+  }
+  try {
+    const template = cpdRegistrationEmail({ name, registrationCode, category, branch, institution, nieeNumber, amount });
+    const result = await resend.emails.send({
+      from: 'NIEE Secretariat <secretary@niee.org.ng>',
+      to: email,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.log(`[${new Date().toISOString()}] CPD reg email sent to ${email} — code: ${registrationCode} — id: ${result.data?.id}`);
+    res.json({ success: true, id: result.data?.id });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to send CPD reg email to ${email}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', adminReady: adminInitialized, paystackWebhookReady: !!PAYSTACK_SECRET_KEY }));
 

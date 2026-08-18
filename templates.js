@@ -624,6 +624,110 @@ function fullPaperSubmissionEmail({ name, submissionCode, paperTitle, subtheme }
   };
 }
 
+// ── CPD Program: registration confirmation ────────────────────────────────────
+function cpdRegistrationEmail({ name, registrationCode, category, branch, institution, nieeNumber, amount }) {
+  const body = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">📚</div>
+    </div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">NIEE Continuing Professional Development (CPD) Program Launch</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      Your registration and payment for the <strong>NIEE CPD Program Launch</strong> have been successfully received.
+      Please find your registration details below.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #a7f3d0;border-radius:8px;padding:24px;margin:0 0 24px;text-align:center;">
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;font-weight:600;">Your Registration Code</p>
+          <p style="color:#065f46;font-size:32px;font-weight:800;letter-spacing:4px;margin:0;font-family:monospace;">${registrationCode}</p>
+          <p style="color:#6b7280;font-size:12px;margin:8px 0 0;">Please present this code at the venue on <strong>Saturday, 22nd August 2026</strong></p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="14" cellspacing="0" style="background:#f8f9fb;border-radius:8px;margin:0 0 24px;">
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Event</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">NIEE CPD Program Launch</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date &amp; Time</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Saturday, 22nd August 2026 — 12 Noon</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Engr. G.O. Aiwerioba Engr. Centre, No. 184 Ekenwen Rd, Benin City, Edo State</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Category</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${category || '—'}</p>
+        </td>
+      </tr>
+      ${branch ? `
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Branch / Chapter</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${branch}</p>
+        </td>
+      </tr>` : ''}
+      ${institution ? `
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Organisation</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${institution}</p>
+        </td>
+      </tr>` : ''}
+      ${nieeNumber ? `
+      <tr>
+        <td style="border-bottom:1px solid #e8ecf0;">
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">NIEE Number</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">${nieeNumber}</p>
+        </td>
+      </tr>` : ''}
+      <tr>
+        <td>
+          <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Amount Paid</p>
+          <p style="color:#059669;font-size:18px;font-weight:800;margin:0;">₦${Number(amount || 0).toLocaleString()}</p>
+        </td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:4px;padding:16px 20px;margin:0 0 24px;">
+      <tr>
+        <td>
+          <p style="color:#1e40af;font-size:14px;font-weight:600;margin:0 0 6px;">What you get as a CPD registrant</p>
+          <ul style="color:#374151;font-size:14px;line-height:1.8;margin:0;padding-left:18px;">
+            <li>COREN-accredited CPD Points toward your licence renewal</li>
+            <li>Access to NIEE Technical Trainings &amp; Webinars</li>
+            <li>Stay current with new codes, climate challenges &amp; technologies</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 28px;text-align:center;">
+      We look forward to welcoming you. For enquiries, contact the NIEE Secretariat.<br>
+      <strong>Engr. Mustapha Adetayo</strong> — 0803 353 7839 &nbsp;|&nbsp;
+      <strong>Engr. Prof. Hillary Owamah</strong> — 0803 570 5814
+    </p>
+  `;
+  return {
+    subject: `CPD Registration Confirmed – ${registrationCode} | NIEE CPD Program Launch`,
+    html: wrapper(body)
+  };
+}
+
 // ── Fellow application confirmation ───────────────────────────────────────────
 function fellowApplicationEmail({ name, referenceCode }) {
   const body = `
@@ -663,5 +767,6 @@ module.exports = {
   reminderPendingEmail, reminderRegisteredEmail, reminderApprovedEmail, reminderRejectedEmail,
   fellowApplicationEmail,
   fadahunsiRegistrationEmail, agmRegistrationEmail,
-  abstractSubmissionEmail, fullPaperSubmissionEmail
+  abstractSubmissionEmail, fullPaperSubmissionEmail,
+  cpdRegistrationEmail
 };
