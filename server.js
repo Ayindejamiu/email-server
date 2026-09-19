@@ -50,6 +50,20 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 app.use(cors());
 
+// Helper: look up authUid from members_registry by email
+async function resolveUidByEmail(db, email) {
+  if (!email) return null;
+  try {
+    const snap = await db.ref('members_registry').orderByChild('email').equalTo(email.trim()).once('value');
+    if (snap.exists()) {
+      const data = snap.val();
+      const uid = data[Object.keys(data)[0]].authUid;
+      return uid || null;
+    }
+  } catch (_) {}
+  return null;
+}
+
 // POST /api/paystack-webhook
 // Registered before express.json() because signature verification needs the raw request body.
 // Configure this URL in the Paystack Dashboard → Settings → API Keys & Webhooks.
@@ -87,21 +101,140 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
 
   const data = event.data || {};
   const { reference, amount, metadata } = data;
-  const uid = metadata && metadata.uid;
-  const purpose = (metadata && metadata.purpose) || 'unknown';
-  const email = (data.customer && data.customer.email) || '';
+  const purpose = (metadata && metadata.purpose) || '';
+  const customerEmail = (data.customer && data.customer.email) || '';
+  const amountNgn = (amount || 0) / 100;
 
-  if (!uid || !reference) {
-    console.warn('[Paystack Webhook] Missing uid or reference in charge.success payload — skipping', reference);
+  if (!reference) {
+    console.warn('[Paystack Webhook] No reference in charge.success payload — skipping');
+    return;
+  }
+
+  const db = admin.database();
+
+  // === AGM 2026 Registration (bank transfer fallback) ===
+  if (purpose === 'agm_registration') {
+    try {
+      // Idempotency: don't create duplicate if client callback already saved it
+      const existSnap = await db.ref('events/agm-2026')
+        .orderByChild('reference').equalTo(reference).once('value');
+      if (existSnap.exists()) {
+        console.log('[Paystack Webhook] AGM registration already exists for', reference);
+        return;
+      }
+
+      const { committed, snapshot: cSnap } = await db.ref('events/agm-2026-counter')
+        .transaction(n => (n || 0) + 1);
+      if (!committed) throw new Error('Counter transaction not committed');
+      const registrationCode = 'AGM-2026-' + String(cSnap.val()).padStart(4, '0');
+
+      const regData = {
+        name:       (metadata && metadata.name)       || '',
+        phone:      (metadata && metadata.phone)      || '',
+        email:      customerEmail,
+        nieeNumber: (metadata && metadata.nieeNumber) || '',
+        branch:     (metadata && metadata.branch)     || '',
+        category:   (metadata && metadata.category)   || '',
+        hasSpouse:  (metadata && metadata.hasSpouse)  || false,
+        amount:     amountNgn,
+        reference,
+        verified:   true,
+        registrationCode,
+        registeredAt: data.paid_at || new Date().toISOString(),
+        source: 'webhook'
+      };
+      await db.ref('events/agm-2026').push(regData);
+
+      try {
+        const tmpl = agmRegistrationEmail({
+          name: regData.name, registrationCode,
+          nieeNumber: regData.nieeNumber, branch: regData.branch,
+          category: regData.category, hasSpouse: regData.hasSpouse, amount: amountNgn
+        });
+        await resend.emails.send({
+          from: 'NIEE Secretariat <secretary@niee.org.ng>',
+          to: customerEmail, subject: tmpl.subject, html: tmpl.html
+        });
+      } catch (emailErr) {
+        console.warn('[Paystack Webhook] AGM email failed:', emailErr.message);
+      }
+
+      console.log('[Paystack Webhook] AGM registration created:', registrationCode, 'for', customerEmail);
+    } catch (err) {
+      console.error('[Paystack Webhook] AGM registration failed for', reference, ':', err.message);
+    }
+    return;
+  }
+
+  // === CPD 2026 Registration (bank transfer fallback) ===
+  if (purpose === 'cpd_registration') {
+    try {
+      const existSnap = await db.ref('events/cpd-2026')
+        .orderByChild('reference').equalTo(reference).once('value');
+      if (existSnap.exists()) {
+        console.log('[Paystack Webhook] CPD registration already exists for', reference);
+        return;
+      }
+
+      const { committed, snapshot: cSnap } = await db.ref('events/cpd-2026-counter')
+        .transaction(n => (n || 0) + 1);
+      if (!committed) throw new Error('Counter transaction not committed');
+      const registrationCode = 'CPD-2026-' + String(cSnap.val()).padStart(4, '0');
+
+      const regData = {
+        name:       (metadata && metadata.name)       || '',
+        phone:      (metadata && metadata.phone)      || '',
+        email:      customerEmail,
+        nieeNumber: (metadata && metadata.nieeNumber) || '',
+        category:   (metadata && metadata.category)   || '',
+        amount:     amountNgn,
+        reference,
+        verified:   true,
+        registrationCode,
+        registeredAt: data.paid_at || new Date().toISOString(),
+        source: 'webhook'
+      };
+      await db.ref('events/cpd-2026').push(regData);
+
+      try {
+        const tmpl = cpdRegistrationEmail({
+          name: regData.name, registrationCode,
+          category: regData.category, amount: amountNgn,
+          nieeNumber: regData.nieeNumber
+        });
+        await resend.emails.send({
+          from: 'NIEE Secretariat <secretary@niee.org.ng>',
+          to: customerEmail, subject: tmpl.subject, html: tmpl.html
+        });
+      } catch (emailErr) {
+        console.warn('[Paystack Webhook] CPD email failed:', emailErr.message);
+      }
+
+      console.log('[Paystack Webhook] CPD registration created:', registrationCode, 'for', customerEmail);
+    } catch (err) {
+      console.error('[Paystack Webhook] CPD registration failed for', reference, ':', err.message);
+    }
+    return;
+  }
+
+  // === Membership payment (initial_registration, registration_fee, annual_dues) ===
+  let uid = metadata && metadata.uid;
+
+  // Bank transfers and some card payments arrive without uid — look up by email
+  if (!uid && customerEmail) {
+    uid = await resolveUidByEmail(db, customerEmail);
+    if (uid) console.log('[Paystack Webhook] Resolved uid by email:', customerEmail, '->', uid);
+  }
+
+  if (!uid) {
+    console.warn('[Paystack Webhook] Cannot resolve uid for reference', reference, '(email:', customerEmail, ')');
     return;
   }
 
   try {
-    const db = admin.database();
     const paymentsRef = db.ref(`payments/${uid}`);
 
-    // Idempotency: the client-side callback may have already recorded this
-    // exact reference, or Paystack may retry the webhook — don't double-record.
+    // Idempotency: don't double-record (client callback may have beaten us)
     const existing = await paymentsRef.orderByChild('reference').equalTo(reference).once('value');
     if (existing.exists()) {
       console.log('[Paystack Webhook] Reference already recorded, skipping', reference);
@@ -110,16 +243,16 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
 
     const paymentRecord = {
       reference,
-      amount: (amount || 0) / 100,
+      amount: amountNgn,
       type: purpose === 'annual_dues' ? 'membership' : 'registration',
       verified: true,
       date: data.paid_at || new Date().toISOString(),
-      email,
+      email: customerEmail,
       source: 'webhook'
     };
     if (purpose === 'annual_dues') {
-      paymentRecord.membershipType = metadata.membershipType || '';
-      paymentRecord.year = metadata.year || '';
+      paymentRecord.membershipType = (metadata && metadata.membershipType) || '';
+      paymentRecord.year = (metadata && metadata.year) || '';
     }
 
     await paymentsRef.push(paymentRecord);
@@ -130,11 +263,11 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
       if (memberSnap.exists()) {
         await memberRef.update({ status: 'Registered', registrationPaidAt: new Date().toISOString() });
       } else {
-        console.warn('[Paystack Webhook] Payment recorded but no member record exists for uid — status not updated', uid);
+        console.warn('[Paystack Webhook] No member record for uid — status not updated', uid);
       }
     }
 
-    console.log(`[Paystack Webhook] Recorded ${purpose} payment ${reference} for uid ${uid}`);
+    console.log(`[Paystack Webhook] Recorded ${purpose || 'unknown'} payment ${reference} for uid ${uid}`);
   } catch (err) {
     console.error('[Paystack Webhook] Failed to record payment', reference, err.message);
   }
@@ -358,6 +491,98 @@ app.post('/api/send-cpd-registration-email', async (req, res) => {
   }
 });
 
+
+// POST /api/admin/sync-payment
+// Used by the admin panel to retroactively sync a Paystack payment to Firebase.
+// Requires a valid Firebase ID token from an admin user in Authorization header.
+// Body: { email, reference, amount, channel?, date? }
+app.post('/api/admin/sync-payment', async (req, res) => {
+  if (!adminInitialized) return res.status(503).json({ error: 'Firebase Admin not configured' });
+
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.replace('Bearer ', '').trim();
+  if (!idToken) return res.status(401).json({ error: 'No auth token provided' });
+
+  try {
+    const db = admin.database();
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const adminSnap = await db.ref(`admins/${decoded.uid}`).once('value');
+    if (!adminSnap.val()) return res.status(403).json({ error: 'Not an admin' });
+  } catch (e) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const { email, reference, amount, channel, date } = req.body;
+  if (!email || !reference) return res.status(400).json({ error: 'email and reference are required' });
+
+  try {
+    const db = admin.database();
+
+    // Look up member by email in members_registry (indexed on email)
+    const registrySnap = await db.ref('members_registry')
+      .orderByChild('email').equalTo(email.trim()).once('value');
+    const registryData = registrySnap.val();
+
+    if (!registryData) {
+      return res.json({ status: 'not_found', reason: 'No member found with email: ' + email });
+    }
+
+    const nieeNumber = Object.keys(registryData)[0];
+    const memberUid  = registryData[nieeNumber].authUid;
+
+    if (!memberUid) {
+      return res.json({ status: 'skipped', reason: `Member ${nieeNumber} exists but has not linked a portal account` });
+    }
+
+    // Idempotency: don't double-record
+    const paymentsRef = db.ref(`payments/${memberUid}`);
+    const existing = await paymentsRef.orderByChild('reference').equalTo(reference).once('value');
+    if (existing.exists()) {
+      return res.json({ status: 'skipped', reason: 'Payment already recorded', nieeNumber, uid: memberUid });
+    }
+
+    // Infer purpose from amount
+    const amountNgn = parseFloat(amount) || 0;
+    let inferredPurpose = 'payment';
+    let membershipType = '';
+    if (amountNgn <= 1500)       { inferredPurpose = 'registration_fee'; }
+    else if (amountNgn === 15000) { inferredPurpose = 'annual_dues'; membershipType = 'Graduate Member'; }
+    else if (amountNgn === 25000) { inferredPurpose = 'annual_dues'; membershipType = 'Corporate Member'; }
+    else if (amountNgn === 35000) { inferredPurpose = 'annual_dues'; membershipType = 'Fellow Member'; }
+
+    const paymentRecord = {
+      reference,
+      amount:   amountNgn,
+      type:     inferredPurpose === 'annual_dues' ? 'membership' : 'registration',
+      verified: true,
+      date:     date || new Date().toISOString(),
+      email,
+      channel:  channel || 'bank_transfer',
+      source:   'admin_sync'
+    };
+    if (membershipType) paymentRecord.membershipType = membershipType;
+
+    await paymentsRef.push(paymentRecord);
+
+    // Promote Pending → Registered for registration fee payments
+    let statusUpdated = false;
+    if (inferredPurpose === 'registration_fee') {
+      const memberSnap = await db.ref(`members/${memberUid}`).once('value');
+      if (memberSnap.exists() && memberSnap.val().status === 'Pending') {
+        await db.ref(`members/${memberUid}`).update({
+          status: 'Registered',
+          registrationPaidAt: date || new Date().toISOString()
+        });
+        statusUpdated = true;
+      }
+    }
+
+    return res.json({ status: 'synced', nieeNumber, uid: memberUid, purpose: inferredPurpose, membershipType: membershipType || undefined, statusUpdated });
+  } catch (err) {
+    console.error('[Admin Sync] Failed for reference', reference, err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', adminReady: adminInitialized, paystackWebhookReady: !!PAYSTACK_SECRET_KEY }));
 
