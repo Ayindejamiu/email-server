@@ -447,7 +447,7 @@ function agmRegistrationEmail({ name, registrationCode, nieeNumber, branch, cate
       <div style="display:inline-block;background:#d1fae5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:30px;">🎫</div>
     </div>
     <h2 style="color:#065f46;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Registration Confirmed!</h2>
-    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM</p>
+    <p style="color:#4b5563;font-size:15px;text-align:center;margin:0 0 28px;">2026 National Conference / AGM &amp; Fellowship Award</p>
 
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear <strong>${name}</strong>,</p>
     <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -475,13 +475,13 @@ function agmRegistrationEmail({ name, registrationCode, nieeNumber, branch, cate
       <tr>
         <td style="border-bottom:1px solid #e8ecf0;">
           <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>
-          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">26th &amp; 27th November, 2026</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">Sat. 28th Nov. 2026 by 5:00pm &mdash; Cocktail Party<br>Sun. 29th Nov. 2026 by 10:00am &mdash; National Conference / Fellowship Award / AGM</p>
         </td>
       </tr>
       <tr>
         <td style="border-bottom:1px solid #e8ecf0;">
           <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
-          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">NSE Auditorium, FCT Abuja</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">El-Kanemi Hall, University of Maiduguri, Maiduguri, Borno State</p>
         </td>
       </tr>
       <tr>

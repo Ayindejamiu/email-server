@@ -99,7 +99,8 @@
           email,
           amount,
           currency: 'NGN',
-          split_code: 'SPL_NNfUa4gYXW',
+          subaccount: 'ACCT_kqh6zot7nq4mour',
+          bearer: 'subaccount',
           callback: function (response) {
             // Save payment record only. Do NOT change member status (remain Approved)
             const paymentRef = push(ref(db, `payments/${writeUid}`));

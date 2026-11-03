@@ -713,7 +713,8 @@ window.addEventListener('DOMContentLoaded', () => {
           email: emailForPayment,
           amount: 1000 * 100,
           currency: 'NGN',
-          split_code: 'SPL_NNfUa4gYXW',
+          subaccount: 'ACCT_kqh6zot7nq4mour',
+          bearer: 'subaccount',
           metadata: { uid: currentUserUID, purpose: 'initial_registration' },
           callback: function(response) {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving your application…';
@@ -797,7 +798,8 @@ window.addEventListener('DOMContentLoaded', () => {
       email: emailForPayment,
       amount: amount * 100,
       currency: 'NGN',
-      split_code: 'SPL_NNfUa4gYXW',
+      subaccount: 'ACCT_kqh6zot7nq4mour',
+      bearer: 'subaccount',
       metadata: { uid, purpose: 'registration_fee' },
       callback: function(response) {
         const paymentRef = push(ref(db, `payments/${uid}`));
@@ -844,7 +846,8 @@ window.addEventListener('DOMContentLoaded', () => {
       email: emailForPayment,
       amount: amount * 100,
       currency: 'NGN',
-      split_code: 'SPL_NNfUa4gYXW',
+      subaccount: 'ACCT_kqh6zot7nq4mour',
+      bearer: 'subaccount',
       metadata: { uid, membershipType, year, purpose: 'annual_dues' },
       callback: function(response) {
         const paymentRef = push(ref(db, `payments/${uid}`));

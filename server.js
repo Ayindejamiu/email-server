@@ -47,6 +47,7 @@ const app = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const PORT = process.env.PORT || 3001;
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const EVENT_WEBHOOK_DELAY_MS = 3 * 60 * 1000;
 
 app.use(cors());
 
@@ -115,6 +116,11 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
   // === AGM 2026 Registration (bank transfer fallback) ===
   if (purpose === 'agm_registration') {
     try {
+      // This webhook is the fallback for registrants who never get back to the page.
+      // Paystack usually calls it before the page has saved, so give the page time to
+      // finish first; otherwise the registrant gets a second code and a second email.
+      await new Promise(resolve => setTimeout(resolve, EVENT_WEBHOOK_DELAY_MS));
+
       // Idempotency: don't create duplicate if client callback already saved it
       const existSnap = await db.ref('events/agm-2026')
         .orderByChild('reference').equalTo(reference).once('value');
@@ -143,7 +149,14 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
         registeredAt: data.paid_at || new Date().toISOString(),
         source: 'webhook'
       };
-      await db.ref('events/agm-2026').push(regData);
+      // Same key as the registration page uses, so one payment can only produce one record
+      const regKey = String(reference).replace(/[.#$\[\]\/]/g, '_');
+      const { committed: regSaved } = await db.ref(`events/agm-2026/${regKey}`)
+        .transaction(current => (current === null ? regData : undefined));
+      if (!regSaved) {
+        console.log('[Paystack Webhook] AGM registration already exists for', reference);
+        return;
+      }
 
       try {
         const tmpl = agmRegistrationEmail({
@@ -169,6 +182,9 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
   // === CPD 2026 Registration (bank transfer fallback) ===
   if (purpose === 'cpd_registration') {
     try {
+      // Same fallback timing as AGM above: let the registration page finish saving first
+      await new Promise(resolve => setTimeout(resolve, EVENT_WEBHOOK_DELAY_MS));
+
       const existSnap = await db.ref('events/cpd-2026')
         .orderByChild('reference').equalTo(reference).once('value');
       if (existSnap.exists()) {
@@ -194,7 +210,14 @@ app.post('/api/paystack-webhook', express.raw({ type: '*/*' }), async (req, res)
         registeredAt: data.paid_at || new Date().toISOString(),
         source: 'webhook'
       };
-      await db.ref('events/cpd-2026').push(regData);
+      // Same key as the registration page uses, so one payment can only produce one record
+      const regKey = String(reference).replace(/[.#$\[\]\/]/g, '_');
+      const { committed: regSaved } = await db.ref(`events/cpd-2026/${regKey}`)
+        .transaction(current => (current === null ? regData : undefined));
+      if (!regSaved) {
+        console.log('[Paystack Webhook] CPD registration already exists for', reference);
+        return;
+      }
 
       try {
         const tmpl = cpdRegistrationEmail({
