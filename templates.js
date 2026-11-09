@@ -481,7 +481,7 @@ function agmRegistrationEmail({ name, registrationCode, nieeNumber, branch, cate
       <tr>
         <td style="border-bottom:1px solid #e8ecf0;">
           <p style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Venue</p>
-          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">El-Kanemi Hall, University of Maiduguri, Maiduguri, Borno State</p>
+          <p style="color:#1a3a5c;font-size:15px;font-weight:600;margin:0;">El-Kanemi Hall, University of Maiduguri, Borno State</p>
         </td>
       </tr>
       <tr>
